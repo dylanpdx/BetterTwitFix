@@ -1,8 +1,8 @@
-﻿pymongo==4.3.3
+pymongo==4.3.3
 boto3==1.26.104
 requests==2.28.2
 Pillow==9.4.0
-Flask==2.2.3
+Flask==2.3.1
 Flask-Cors==3.0.10
 yt-dlp==2022.7.18
 twitter==1.19.6
