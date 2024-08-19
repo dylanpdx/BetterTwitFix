@@ -5,7 +5,7 @@ Pillow==10.2.0
 Flask==2.2.3
 Flask-Cors==4.0.0
 yt-dlp==2022.7.18
-Werkzeug==2.3.7
+Werkzeug==3.0.3
 numerize==0.12
 oauthlib==3.2.2
 PyRTF3==0.47.5
