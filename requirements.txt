@@ -4,7 +4,7 @@ requests==2.32.3
 Pillow==10.4.0
 Flask==2.2.3
 Flask-Cors==4.0.0
-Werkzeug==2.3.7
+Werkzeug==3.0.6
 numerize==0.12
 oauthlib==3.2.2
 PyRTF3==0.47.5
