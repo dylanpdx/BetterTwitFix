@@ -230,14 +230,6 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
     if 'in_reply_to_status_id_str' in tweetL and tweetL['in_reply_to_status_id_str'] != None:
         replyingToID = tweetL['in_reply_to_status_id_str']
 
-    if 'screen_name' not in userL and 'core' in tweet["core"]["user_results"]["result"]:
-        userL['screen_name'] = tweet["core"]["user_results"]["result"]["core"]["screen_name"]
-        if 'name' not in userL:
-            userL['name'] = tweet["core"]["user_results"]["result"]["core"]["name"]
-    
-    if 'profile_image_url_https' not in userL and 'avatar' in tweet["core"]["user_results"]["result"]:
-        userL['profile_image_url_https'] = tweet["core"]["user_results"]["result"]["avatar"]["image_url"]
-
     apiObject = {
         "text": twText,
         "likes": tweetL["favorite_count"],
