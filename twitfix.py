@@ -415,7 +415,7 @@ def twitfix(sub_path):
         embeddingMedia = tweetData['hasMedia']
         renderMedia = None
         if embeddingMedia:
-            renderMedia = determineMediaToEmbed(tweetData,embedIndex)
+            renderMedia = determineMediaToEmbed(tweetData,embedIndex,convertGif=False)
         # direct embeds should always prioritize the main tweet, so don't check for qrt
         # determine what type of media we're dealing with
         if not embeddingMedia and qrt is None:

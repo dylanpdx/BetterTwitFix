@@ -64,7 +64,7 @@ def determineEmbedTweet(tweetData):
         return tweetData['qrt']
     return tweetData
 
-def determineMediaToEmbed(tweetData,embedIndex = -1):
+def determineMediaToEmbed(tweetData,embedIndex = -1,convertGif = True):
     if tweetData['allSameType'] and tweetData['media_extended'][0]['type'] == "image" and embedIndex == -1 and tweetData['combinedMediaUrl'] != None:
         return {"url":tweetData['combinedMediaUrl'],"type":"image"}
     else:
@@ -82,7 +82,7 @@ def determineMediaToEmbed(tweetData,embedIndex = -1):
         if media['type'] == "image":
             return media
         elif media['type'] == "video" or media['type'] == "gif":
-            if media['type'] == "gif":
+            if media['type'] == "gif" and convertGif:
                 if config['config']['gifConvertAPI'] != "" and config['config']['gifConvertAPI'] != "none":
                     vurl=media['originalUrl'] if 'originalUrl' in media else media['url']
                     media['url'] = config['config']['gifConvertAPI'] + "/convert?url=" + vurl
