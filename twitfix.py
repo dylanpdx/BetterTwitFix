@@ -67,13 +67,14 @@ def isValidUserAgent(user_agent):
     return False
 
 def message(text):
-    return render_template(
+    rendered = render_template(
         'default.html', 
         message = text, 
         color   = config['config']['color'], 
         appname = config['config']['appname'], 
         repo    = config['config']['repo'], 
         url     = config['config']['url'] )
+    return Response(rendered, mimetype='text/html',headers={"Cache-Tag": "message"})
 
 def generateActivityLink(tweetData,media=None,mediatype=None,embedIndex=-1):
     global user_agent
@@ -422,26 +423,26 @@ def twitfix(sub_path):
             return renderTextTweetEmbed(tweetData)
         else:
             if renderMedia['type'] == "image":
-                return render_template("rawimage.html",media=renderMedia)
+                return Response(render_template("rawimage.html",media=renderMedia),headers={"Cache-Tag": "embed"})
             elif renderMedia['type'] == "video" or renderMedia['type'] == "gif":
-                return render_template("rawvideo.html",media=renderMedia)
+                return Response(render_template("rawvideo.html",media=renderMedia),headers={"Cache-Tag": "embed"})
     else: # full embed
         embedTweetData = determineEmbedTweet(tweetData)
         embeddingMedia = embedTweetData['hasMedia']
         
         if "article" in embedTweetData and embedTweetData["article"] is not None:
-            return renderArticleTweetEmbed(tweetData," • See original tweet for full article")
+            return Response(renderArticleTweetEmbed(tweetData," • See original tweet for full article"),headers={"Cache-Tag": "embed"})
         elif not embeddingMedia:
-            return renderTextTweetEmbed(tweetData)
+            return Response(renderTextTweetEmbed(tweetData),headers={"Cache-Tag": "embed"})
         else:
             media = determineMediaToEmbed(embedTweetData,embedIndex)
             suffix=""
             if "suffix" in media:
                 suffix = media["suffix"]
             if media['type'] == "image":
-                return renderImageTweetEmbed(tweetData,media['url'] , appnameSuffix=suffix,embedIndex=embedIndex)
+                return Response(renderImageTweetEmbed(tweetData,media['url'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
             elif media['type'] == "video" or media['type'] == "gif":
-                return renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex)
+                return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
 
     return message(msgs.failedToScan)
 
