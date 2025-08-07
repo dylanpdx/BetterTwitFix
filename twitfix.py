@@ -74,7 +74,7 @@ def message(text):
         appname = config['config']['appname'], 
         repo    = config['config']['repo'], 
         url     = config['config']['url'] )
-    return Response(rendered, mimetype='text/html',headers={"Cache-Tag": "message"})
+    return Response(rendered, mimetype='text/html',headers={"Cache-Tag": "message", "Cache-Control": "max-age=1760, public"})
 
 def generateActivityLink(tweetData,media=None,mediatype=None,embedIndex=-1):
     global user_agent
