@@ -47,7 +47,7 @@ functions:
     handler: wsgi_handler.handler
     url: true
     timeout: 15
-    memorySize: 500
+    memorySize: 128
     layers:
       - Ref: PythonRequirementsLambdaLayer
 
