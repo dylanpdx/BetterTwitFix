@@ -319,15 +319,13 @@ def extractStatusV2Android(url,workaroundTokens):
     twid = m.group(2)
     if workaroundTokens == None:
         raise TwExtractError(400, "Extract error (no tokens defined)")
-    # get tweet
     tokens = workaroundTokens
     random.shuffle(tokens)
-    for authToken in tokens:
+    def request_with_token(twid, authToken):
         try:
-            
             vars = json.loads('{"referrer":"home","includeTweetImpression":true,"includeHasBirdwatchNotes":false,"isReaderMode":false,"includeEditPerspective":false,"includeEditControl":true,"focalTweetId":0,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true}')
             vars['focalTweetId'] = int(twid)
-            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{androidGraphql_api}/ConversationTimelineV2?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(androidGraphqlFeatures)}", authToken=authToken)
+            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{androidGraphql_api}/ConversationTimelineV2?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(androidGraphqlFeatures)}", authToken=authToken,btoken=androidBearer)
             try:
                 rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
                 print(f"Twitter Android Token Rate limit remaining: {rateLimitRemaining}")
@@ -336,13 +334,13 @@ def extractStatusV2Android(url,workaroundTokens):
             if tweet.status_code == 429:
                 print("Rate limit reached for android token")
                 # try another token
-                continue
+                raise TwExtractError(400, "Extract error: rate limit reached")
             output = tweet.json()
             
             if "errors" in output:
                 print(f"Error in output: {json.dumps(output['errors'])}")
                 # try another token
-                continue
+                raise TwExtractError(400, "Extract error: errors in output - "+json.dumps(output['errors']))
             entries = None
             for instruction in output['data']['timeline_response']['instructions']:
                 if instruction["__typename"] == "TimelineAddEntries":
@@ -366,11 +364,11 @@ def extractStatusV2Android(url,workaroundTokens):
                 print("Tweet 404")
                 return {'error':'Tweet not found (404); May be due to invalid tweet, changes in Twitter\'s API, or a protected account.'}
         except Exception as e:
-            print(f"Exception in extractStatusV2: {str(e)}")
-            continue
+            print(f"Exception in extractStatusV2Android: {str(e)}")
+            raise TwExtractError(400, "Extract error")
 
         return tweet
-    raise TwExtractError(400, "Extract error")
+    return parallel_token_request(twid, tokens, request_with_token)
 
 def extractStatusV2TweetDetail(url,workaroundTokens):
     # get tweet ID
@@ -383,7 +381,7 @@ def extractStatusV2TweetDetail(url,workaroundTokens):
     # get tweet
     tokens = workaroundTokens
     random.shuffle(tokens)
-    for authToken in tokens:
+    def request_with_token(twid, authToken):
         try:
             vars = json.loads('{"focalTweetId":"0","with_rux_injections":false,"includePromotedContent":true,"withCommunity":true,"withQuickPromoteEligibilityTweetFields":true,"withBirdwatchNotes":true,"withVoice":true,"withV2Timeline":true}')
             vars['focalTweetId'] = str(twid)
@@ -396,13 +394,13 @@ def extractStatusV2TweetDetail(url,workaroundTokens):
             if tweet.status_code == 429:
                 print("Rate limit reached for token")
                 # try another token
-                continue
+                raise TwExtractError(400, "Extract error: rate limit reached")
             output = tweet.json()
             
             if "errors" in output:
                 print(f"Error in output: {json.dumps(output['errors'])}")
                 # try another token
-                continue
+                raise TwExtractError(400, "Extract error: errors in output - "+json.dumps(output['errors']))
             entries = None
             for instruction in output['data']['threaded_conversation_with_injections_v2']['instructions']:
                 if instruction["type"] == "TimelineAddEntries":
@@ -427,10 +425,10 @@ def extractStatusV2TweetDetail(url,workaroundTokens):
                 return {'error':'Tweet not found (404); May be due to invalid tweet, changes in Twitter\'s API, or a protected account.'}
         except Exception as e:
             print(f"Exception in extractStatusV2: {str(e)}")
-            continue
+            raise TwExtractError(400, "Extract error")
 
         return tweet
-    raise TwExtractError(400, "Extract error")
+    return parallel_token_request(twid, tokens, request_with_token)
 
 def extractStatusV2Anon(url,x):
     # get tweet ID
@@ -492,7 +490,7 @@ def fixTweetData(tweet):
     return tweet
 
 def extractStatus(url,workaroundTokens=None):
-    methods=[extractStatusV2Anon,extractStatusV2,extractStatusV2TweetDetail,extractStatusV2Android]
+    methods=[extractStatusV2Anon,extractStatusV2,extractStatusV2Android,extractStatusV2TweetDetail]
     for method in methods:
         try:
             result = method(url,workaroundTokens)
