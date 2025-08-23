@@ -385,10 +385,9 @@ def extractStatusV2TweetDetail(url,workaroundTokens):
     random.shuffle(tokens)
     for authToken in tokens:
         try:
-            
             vars = json.loads('{"focalTweetId":"0","with_rux_injections":false,"includePromotedContent":true,"withCommunity":true,"withQuickPromoteEligibilityTweetFields":true,"withBirdwatchNotes":true,"withVoice":true,"withV2Timeline":true}')
             vars['focalTweetId'] = str(twid)
-            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{tweetDetailGraphql_api}/TweetDetail?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(tweetDetailGraphqlFeatures)}", authToken=authToken)
+            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{tweetDetailGraphql_api}/TweetDetail?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(tweetDetailGraphqlFeatures)}", authToken=authToken,btoken=v2bearer)
             try:
                 rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
                 print(f"Twitter Token Rate limit remaining: {rateLimitRemaining}")
@@ -493,7 +492,7 @@ def fixTweetData(tweet):
     return tweet
 
 def extractStatus(url,workaroundTokens=None):
-    methods=[extractStatusV2Anon,extractStatusV2TweetDetail,extractStatusV2Android,extractStatusV2]
+    methods=[extractStatusV2Anon,extractStatusV2,extractStatusV2TweetDetail,extractStatusV2Android]
     for method in methods:
         try:
             result = method(url,workaroundTokens)
