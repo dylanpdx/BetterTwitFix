@@ -266,19 +266,13 @@ def getTweetData(twitter_url,include_txt="false",include_rtf="false"):
         return cachedVNF
 
     try:
-        rawTweetData = twExtract.extractStatusV2Anon(twitter_url, None)
+        if config['config']['workaroundTokens'] is not None:
+            workaroundTokens = config['config']['workaroundTokens'].split(",")
+        else:
+            workaroundTokens = None
+        rawTweetData = twExtract.extractStatus(twitter_url,workaroundTokens=workaroundTokens)
     except:
         rawTweetData = None
-    if rawTweetData is None:
-        try:
-            if config['config']['workaroundTokens'] is not None:
-                workaroundTokens = config['config']['workaroundTokens'].split(",")
-            else:
-                workaroundTokens = None
-            
-            rawTweetData = twExtract.extractStatus(twitter_url,workaroundTokens=workaroundTokens)
-        except:
-            rawTweetData = None
     if rawTweetData == None or 'error' in rawTweetData:
         return None
 
