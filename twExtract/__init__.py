@@ -9,6 +9,7 @@ from oauthlib import oauth1
 import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import twUtils
+import concurrent.futures
 bearer="Bearer AAAAAAAAAAAAAAAAAAAAAPYXBAAAAAAACLXUNDekMxqa8h%2F40K4moUkGsoc%3DTYfbDKbT3jJPCEVnMYqilB28NHfOPqkca3qaAxGfsyKCs0wRbw"
 v2bearer="Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 androidBearer="Bearer AAAAAAAAAAAAAAAAAAAAAFXzAwAAAAAAMHCxpeSDG1gLNLghVe8d74hl6k4%3DRUMF4xAQLsbeBhTSRrCiQpJtxoGWeyHrDb5te2jpGskWDFW82F"
@@ -49,6 +50,37 @@ class TwExtractError(Exception):
 
     def __str__(self):
         return self.msg
+
+def parallel_token_request(twid, tokens, request_function):
+    results = []
+    errors = []
+    def try_token(token):
+        try:
+            result = request_function(twid, token)
+            return {'success': True, 'result': result}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(2, len(tokens))) as executor:
+        futures = {executor.submit(try_token, token): token for token in tokens}
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            if result['success']:
+                results.append(result)
+            else:
+                errors.append(result)
+            
+            # Early return if success
+            if result['success']:
+                for f in futures: # Cancel remaining futures
+                    if not f.done():
+                        f.cancel()
+                return result['result']
+    
+    # all tokens failed
+    if errors:
+        raise TwExtractError(400, f"All tokens failed. Last error: {errors[-1]['error']}")
+    return None
 
 def cycleBearerTokenGet(url,headers):
     global bearerTokens
@@ -237,51 +269,47 @@ def extractStatusV2(url,workaroundTokens):
     # get tweet
     tokens = workaroundTokens
     random.shuffle(tokens)
-    for authToken in tokens:
+    def request_with_token(twid, authToken):
+        vars = json.loads('{"includeTweetImpression":true,"includeHasBirdwatchNotes":false,"includeEditPerspective":false,"rest_ids":["x"],"includeEditControl":true,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true}')
+        vars['rest_ids'][0] = str(twid)
+        tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2graphql_api}/TweetResultsByIdsQuery?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2Features)}",authToken=authToken,btoken=v2bearer)
         try:
-            vars = json.loads('{"includeTweetImpression":true,"includeHasBirdwatchNotes":false,"includeEditPerspective":false,"rest_ids":["x"],"includeEditControl":true,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true}')
-            vars['rest_ids'][0] = str(twid)
-            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2graphql_api}/TweetResultsByIdsQuery?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2Features)}",authToken=authToken)
-            try:
-                rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
-                print(f"Twitter Token Rate limit remaining: {rateLimitRemaining}")
-            except: # for some reason the header is not always present
-                pass
-            if tweet.status_code == 429:
-                print("Rate limit reached for token (429)")
-                # try another token
+            rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
+            print(f"Twitter Token Rate limit remaining: {rateLimitRemaining}")
+        except: # for some reason the header is not always present
+            pass
+        if tweet.status_code == 429:
+            print("Rate limit reached for token (429)")
+            # try another token
+            raise TwExtractError(400, "Extract error: rate limit reached")
+        output = tweet.json()
+        
+        if "errors" in output:
+            print(f"Error in output: {json.dumps(output['errors'])}")
+            # try another token
+            raise TwExtractError(400, "Extract error: errors in output - "+json.dumps(output['errors']))
+        entries=output['data']['tweet_results']
+        tweetEntry=None
+        for entry in entries:
+            if 'result' not in entry:
+                print("Tweet result not found in entry")
                 continue
-            output = tweet.json()
-            
-            if "errors" in output:
-                print(f"Error in output: {json.dumps(output['errors'])}")
-                # try another token
-                continue
-            entries=output['data']['tweet_results']
-            tweetEntry=None
-            for entry in entries:
-                if 'result' not in entry:
-                    print("Tweet result not found in entry")
-                    continue
-                result = entry['result']
-                if '__typename' in result and result['__typename'] == 'TweetWithVisibilityResults':
-                    result=result['tweet']
-                elif '__typename' in result and result['__typename'] == 'TweetUnavailable':
-                    if 'reason' in result:
-                        return {'error':'Tweet unavailable: '+result['reason']}
-                    return {'error':'Tweet unavailable'}
-                if 'rest_id' in result and result['rest_id'] == twid:
-                    tweetEntry=result
-                    break
-            tweet=tweetEntry
-            if tweet is None:
-                print("Tweet 404")
-                return {'error':'Tweet not found (404); May be due to invalid tweet, changes in Twitter\'s API, or a protected account.'}
-        except Exception as e:
-            print(f"Exception in extractStatusV2: {str(e)}")
-            continue
+            result = entry['result']
+            if '__typename' in result and result['__typename'] == 'TweetWithVisibilityResults':
+                result=result['tweet']
+            elif '__typename' in result and result['__typename'] == 'TweetUnavailable':
+                if 'reason' in result:
+                    return {'error':'Tweet unavailable: '+result['reason']}
+                return {'error':'Tweet unavailable'}
+            if 'rest_id' in result and result['rest_id'] == twid:
+                tweetEntry=result
+                break
+        tweet=tweetEntry
+        if tweet is None:
+            print("Tweet 404")
+            return {'error':'Tweet not found (404); May be due to invalid tweet, changes in Twitter\'s API, or a protected account.'}
         return tweet
-    raise TwExtractError(400, "Extract error")
+    return parallel_token_request(twid, tokens, request_with_token)
 
 def extractStatusV2Android(url,workaroundTokens):
     # get tweet ID

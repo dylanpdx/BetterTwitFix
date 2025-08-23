@@ -38,7 +38,7 @@ def test_twextract_textTweetExtract():
     assert tweet["user"]["screen_name"]=="jack"
     assert 'extended_entities' not in tweet
     
-def test_twextract_extractV2(): # remove this when v2 is default
+def test_twextract_extractV2():
     tweet = twExtract.extractStatusV2(testTextTweet,workaroundTokens=tokens)
 
 def test_twextract_UserExtract():
