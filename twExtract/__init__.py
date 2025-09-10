@@ -42,6 +42,9 @@ tweetDetailGraphql_api="e7RKseIxLu7HgkWNKZ6qnw"
 tweetFeedGraphqlFeatures='{"rweb_video_screen_enabled":false,"profile_label_improvements_pcf_label_in_post_enabled":true,"rweb_tipjar_consumption_enabled":true,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_timeline_navigation_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"premium_content_api_read_enabled":false,"communities_web_enable_tweet_community_results_fetch":true,"c9s_tweet_anatomy_moderator_badge_enabled":true,"responsive_web_grok_analyze_button_fetch_trends_enabled":false,"responsive_web_grok_analyze_post_followups_enabled":true,"responsive_web_jetfuel_frame":false,"responsive_web_grok_share_attachment_enabled":true,"articles_preview_enabled":true,"responsive_web_edit_tweet_api_enabled":true,"graphql_is_translatable_rweb_tweet_is_translatable_enabled":true,"view_counts_everywhere_api_enabled":true,"longform_notetweets_consumption_enabled":true,"responsive_web_twitter_article_tweet_consumption_enabled":true,"tweet_awards_web_tipping_enabled":false,"responsive_web_grok_show_grok_translated_post":false,"responsive_web_grok_analysis_button_from_backend":true,"creator_subscriptions_quote_tweet_preview_enabled":false,"freedom_of_speech_not_reach_fetch_enabled":true,"standardized_nudges_misinfo":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"longform_notetweets_inline_media_enabled":true,"responsive_web_grok_image_annotation_enabled":true,"responsive_web_enhance_cards_enabled":false}'
 tweetFeedGraphql_api="OAx9yEcW3JA9bPo63pcYlA"
 
+userByScreenNameGraphqlFeatures='{"hidden_profile_subscriptions_enabled":true,"payments_enabled":false,"profile_label_improvements_pcf_label_in_post_enabled":true,"rweb_tipjar_consumption_enabled":true,"verified_phone_label_enabled":false,"subscriptions_verification_info_is_identity_verified_enabled":true,"subscriptions_verification_info_verified_since_enabled":true,"highlights_tweets_tab_ui_enabled":true,"responsive_web_twitter_article_notes_tab_enabled":true,"subscriptions_feature_can_gift_premium":true,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"responsive_web_graphql_timeline_navigation_enabled":true}'
+userByScreenNameGraphql_api="96tVxbPqMZDoYB5pmzezKA"
+
 twitterUrl = "x.com" # doubt this will change but just in case
 class TwExtractError(Exception):
     def __init__(self, code, message):
@@ -522,20 +525,26 @@ def extractUser(url,workaroundTokens):
         if authToken.startswith("oa|"): # oauth token not supported atm
             continue
         try:
-            
-            reqHeaders = getAuthHeaders(bearer,authToken=authToken)
+            vars=json.loads('{"screen_name":"","withGrokTranslatedBio":false}')
+            reqHeaders = getAuthHeaders(v2bearer,authToken=authToken)
             if not useId:
-                user = requests.get(f"https://api.{twitterUrl}/1.1/users/show.json?screen_name={screen_name}",headers=reqHeaders)
+                vars['screen_name'] = screen_name
+                user = requests.get(f"https://x.com/i/api/graphql/{userByScreenNameGraphql_api}/UserByScreenName",{'variables':json.dumps(vars),'features':userByScreenNameGraphqlFeatures,'fieldToggles':'{"withAuxiliaryUserLabels":true}'},headers=reqHeaders)
             else:
-                user = requests.get(f"https://api.{twitterUrl}/1.1/users/show.json?user_id={screen_name}",headers=reqHeaders)
+                raise NotImplementedError("User ID method not implemented")
+                #user = requests.get(f"https://api.{twitterUrl}/1.1/users/show.json?user_id={screen_name}",headers=reqHeaders)
             output = user.json()
             if "errors" in output:
                 # pick the first error and create a twExtractError
                 error = output["errors"][0]
                 raise TwExtractError(error["code"], error["message"])
+            elif 'user' not in output['data']:
+                raise TwExtractError(404, "User not found.")
+            elif output['data']['user']['result']['__typename'] == 'UserUnavailable':
+                raise TwExtractError(404, output['data']['user']['result']['message'])
             return output
         except Exception as e:
-            if hasattr(e,"msg") and (e.msg == 'User has been suspended.' or e.msg == 'User not found.'):
+            if hasattr(e,"msg") and ('suspended' in e.msg or e.msg == 'User not found.'):
                 raise e
             continue
     raise TwExtractError(400, "Extract error")

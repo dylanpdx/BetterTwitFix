@@ -3,6 +3,7 @@ import os
 import twExtract
 import utils
 from vx_testdata import *
+import twitfix
 
 def test_twextract_syndicationAPI():
     tweet = twExtract.extractStatus_syndication(testMediaTweet,workaroundTokens=tokens)
@@ -42,20 +43,23 @@ def test_twextract_extractV2():
     tweet = twExtract.extractStatusV2(testTextTweet,workaroundTokens=tokens)
 
 def test_twextract_UserExtract():
-    user = twExtract.extractUser(testUser,workaroundTokens=tokens)
+    rawUserData = twExtract.extractUser(testUser,workaroundTokens=tokens)
+    user = twitfix.getApiUserResponse(rawUserData)
     assert user["screen_name"]=="jack"
     assert user["id"]==12
     assert user["created_at"] == "Tue Mar 21 20:50:14 +0000 2006"
 
 def test_twextract_UserExtractID():
-    user = twExtract.extractUser(testUserIDUrl,workaroundTokens=tokens)
+    rawUserData = twExtract.extractUser(testUserIDUrl,workaroundTokens=tokens)
+    user = twitfix.getApiUserResponse(rawUserData)
     assert user["screen_name"]=="jack"
     assert user["id"]==12
     assert user["created_at"] == "Tue Mar 21 20:50:14 +0000 2006"
 
 def test_twextract_UserExtractWeirdURLs():
     for url in testUserWeirdURLs:
-        user = twExtract.extractUser(url,workaroundTokens=tokens)
+        rawUserData = twExtract.extractUser(url,workaroundTokens=tokens)
+        user = twitfix.getApiUserResponse(rawUserData)
         assert user["screen_name"]=="jack"
         assert user["id"]==12
         assert user["created_at"] == "Tue Mar 21 20:50:14 +0000 2006"

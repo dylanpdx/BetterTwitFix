@@ -4,18 +4,19 @@ from configHandler import config
 from utils import stripEndTCO
 
 def getApiUserResponse(user):
+    userResult = user["data"]["user"]["result"]
     return {
-        "id": user["id"],
-        "screen_name": user["screen_name"],
-        "name": user["name"],
-        "profile_image_url": user["profile_image_url_https"],
-        "description": user["description"],
-        "location": user["location"],
-        "followers_count": user["followers_count"],
-        "following_count": user["friends_count"],
-        "tweet_count": user["statuses_count"],
-        "created_at": user["created_at"],
-        "protected": user["protected"],
+        "id": int(userResult["rest_id"]),
+        "screen_name": userResult["core"]["screen_name"],
+        "name": userResult["core"]["name"],
+        "profile_image_url": userResult['avatar']["image_url"],
+        "description": userResult["legacy"]["description"],
+        "location": userResult["location"]["location"],
+        "followers_count": userResult["legacy"]["followers_count"],
+        "following_count": userResult["legacy"]["friends_count"],
+        "tweet_count": userResult["legacy"]["statuses_count"],
+        "created_at": userResult["core"]["created_at"],
+        "protected": userResult["privacy"]["protected"],
         "fetched_on": int(datetime.now().timestamp()),
     }
 

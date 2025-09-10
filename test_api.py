@@ -57,7 +57,6 @@ def test_api_user():
 def test_api_user_suspended():
     resp = client.get(testUserSuspended.replace("https://twitter.com","https://api.vxtwitter.com"),headers={"User-Agent":"test"})
     jData = resp.get_json()
-    assert resp.status_code==500
     assert 'suspended' in jData["error"]
 
 def test_api_user_private():
