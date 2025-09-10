@@ -32,5 +32,6 @@ with open('generated.txt', 'w',encoding='utf-8') as f:
         del VNF['user_name']
         del VNF['user_profile_image_url']
         del VNF['communityNote']
+        del VNF['fetched_on']
         # write in a format that can be copy-pasted into a python file, i.e testTextTweet={...
         f.write(f"{test}_compare={VNF}\n")

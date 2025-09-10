@@ -48,6 +48,10 @@ def test_api_include_rtf_nomedia():
     assert resp.status_code==200
     assert not any(".rtf" in i for i in jData["mediaURLs"])
 
+def test_api_mixedmedia():
+    resp = client.get(testMixedMediaTweet.replace("https://twitter.com","https://api.vxtwitter.com")+"?include_txt=true",headers={"User-Agent":"test"})
+    assert resp.status_code==200
+
 def test_api_user():
     resp = client.get(testUser.replace("https://twitter.com","https://api.vxtwitter.com"),headers={"User-Agent":"test"})
     jData = resp.get_json()

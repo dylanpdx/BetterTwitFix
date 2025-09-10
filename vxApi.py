@@ -84,6 +84,7 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
                         extendedInfo["duration_millis"] = 0
                     extendedInfo["thumbnail_url"] = i["media_url_https"]
                     extendedInfo["altText"] = altText
+                    extendedInfo["id_str"] = i["id_str"]
                     media_extended.append(extendedInfo)
                 else:
                     media.append(i["media_url_https"])
@@ -95,6 +96,7 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
                     extendedInfo["type"] = "image"
                     extendedInfo["size"] = {"width":i["original_info"]["width"],"height":i["original_info"]["height"]}
                     extendedInfo["thumbnail_url"] = i["media_url_https"]
+                    extendedInfo["id_str"] = i["id_str"]
                     media_extended.append(extendedInfo)
 
         if "hashtags" in tweetL["entities"]:
