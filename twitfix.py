@@ -286,14 +286,18 @@ def getTweetData(twitter_url,include_txt="false",include_rtf="false"):
     return tweetData
 
 def getUserData(twitter_url,includeFeed=False):
-    rawUserData = twExtract.extractUser(twitter_url,workaroundTokens=config['config']['workaroundTokens'].split(','))
+    if config['config']['workaroundTokens'] is not None:
+                workaroundTokens = config['config']['workaroundTokens'].split(",")
+            else:
+                workaroundTokens = None
+    rawUserData = twExtract.extractUser(twitter_url,workaroundTokens=workaroundTokens))
     userData = getApiUserResponse(rawUserData)
 
     if includeFeed:
         if userData['protected']:
             userData['latest_tweets']=[]
         else:
-            feed = twExtract.extractUserFeedFromId(userData['id'],workaroundTokens=config['config']['workaroundTokens'].split(','))
+            feed = twExtract.extractUserFeedFromId(userData['id'],workaroundTokens=workaroundTokens))
             apiFeed = []
             for tweet in feed:
                 apiFeed.append(getApiResponse(tweet))
