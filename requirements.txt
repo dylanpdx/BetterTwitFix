@@ -1,5 +1,5 @@
 pymongo==4.8.0
-boto3==1.36.6
+boto3==1.40.30
 requests==2.32.3
 Pillow==10.4.0
 Flask==2.2.3
