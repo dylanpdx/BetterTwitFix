@@ -23,9 +23,10 @@ def getApiUserResponse(user):
 def getApiResponse(tweet,include_txt=False,include_rtf=False):
     tweetL = tweet["legacy"]
     if "user_result" in tweet["core"]:
-        userL = tweet["core"]["user_result"]["result"]["legacy"]
+        user = tweet["core"]["user_result"]["result"]
     elif "user_results" in tweet["core"]:
-        userL = tweet["core"]["user_results"]["result"]["legacy"]
+        user = tweet["core"]["user_results"]["result"]
+    userL = user["legacy"]
     media=[]
     media_extended=[]
     hashtags=[]
@@ -33,6 +34,14 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
     oldTweetVersion = False
     tweetArticle=None
     lang=None
+
+    if "screen_name" not in userL:
+        userL["screen_name"] = user["core"]["screen_name"]
+    if "name" not in userL:
+        userL["name"] = user["core"]["name"]
+    if "profile_image_url_https" not in userL:
+        userL["profile_image_url_https"] = user["avatar"]["image_url"]
+
     #editedTweet=False
     try:
         if "birdwatch_pivot" in tweet:
