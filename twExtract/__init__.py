@@ -47,6 +47,9 @@ userByScreenNameGraphql_api="96tVxbPqMZDoYB5pmzezKA"
 userByRestIdGraphql_api="8r5oa_2vD0WkhIAOkY4TTA"
 
 twitterUrl = "x.com" # doubt this will change but just in case
+
+simultaneousRequests = int(os.getenv("VXTWITTER_SIMULTANEOUS_REQUESTS",1))
+
 class TwExtractError(Exception):
     def __init__(self, code, message):
         self.code = code
@@ -65,7 +68,7 @@ def parallel_token_request(twid, tokens, request_function):
         except Exception as e:
             return {'success': False, 'error': str(e)}
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(2, len(tokens))) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(simultaneousRequests, len(tokens))) as executor:
         futures = {executor.submit(try_token, token): token for token in tokens}
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
