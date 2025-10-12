@@ -124,36 +124,42 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
             for i in tweetL["entities"]["hashtags"]:
                 hashtags.append(i["text"])
     elif "card" in tweet:
-        if 'name' in tweet['card'] and tweet['card']['name'] == "player":
-            width = None
-            height = None
-            vidUrl = None
-            for i in tweet['card']['binding_values']:
-                if i['key'] == 'player_stream_url':
-                    vidUrl = i['value']['string_value']
-                elif i['key'] == 'player_width':
-                    width = int(i['value']['string_value'])
-                elif i['key'] == 'player_height':
-                    height = int(i['value']['string_value'])
-            if vidUrl != None and width != None and height != None:
-                media.append(vidUrl)
-                media_extended.append({"url":vidUrl,"type":"video","size":{"width":width,"height":height}})
-        else:
-            for i in tweet['card']['binding_values']:
-                if i['key'] == 'unified_card' and 'value' in i and 'string_value' in i['value']:
-                    card = json.loads(i['value']['string_value'])
-                    media_key = card['component_objects']['media_1']['data']['id']
-                    media_entry = card['media_entities'][media_key]
-                    extendedInfo = getExtendedVideoOrGifInfo(media_entry)
-                    media.append(extendedInfo['url'])
-                    media_extended.append(extendedInfo)
-                    break
-                elif i['key'] == 'photo_image_full_size_large' and 'value' in i and 'image_value' in i['value']:
-                    imgData = i['value']['image_value']
-                    imgurl = imgData['url']
-                    media.append(imgurl)
-                    media_extended.append({"url":imgurl,"type":"image","size":{"width":imgData['width'],"height":imgData['height']}})
-                    break
+        bindingValues = None
+        if 'binding_values' in tweet['card']:
+            bindingValues = tweet['card']['binding_values']
+        elif 'legacy' in tweet['card'] and 'binding_values' in tweet['card']['legacy']:
+            bindingValues = tweet['card']['legacy']['binding_values']
+        if bindingValues != None:
+            if 'name' in tweet['card'] and tweet['card']['name'] == "player":
+                width = None
+                height = None
+                vidUrl = None
+                for i in bindingValues:
+                    if i['key'] == 'player_stream_url':
+                        vidUrl = i['value']['string_value']
+                    elif i['key'] == 'player_width':
+                        width = int(i['value']['string_value'])
+                    elif i['key'] == 'player_height':
+                        height = int(i['value']['string_value'])
+                if vidUrl != None and width != None and height != None:
+                    media.append(vidUrl)
+                    media_extended.append({"url":vidUrl,"type":"video","size":{"width":width,"height":height}})
+            else:
+                for i in bindingValues:
+                    if i['key'] == 'unified_card' and 'value' in i and 'string_value' in i['value']:
+                        card = json.loads(i['value']['string_value'])
+                        media_key = card['component_objects']['media_1']['data']['id']
+                        media_entry = card['media_entities'][media_key]
+                        extendedInfo = getExtendedVideoOrGifInfo(media_entry)
+                        media.append(extendedInfo['url'])
+                        media_extended.append(extendedInfo)
+                        break
+                    elif i['key'] == 'photo_image_full_size_large' and 'value' in i and 'image_value' in i['value']:
+                        imgData = i['value']['image_value']
+                        imgurl = imgData['url']
+                        media.append(imgurl)
+                        media_extended.append({"url":imgurl,"type":"image","size":{"width":imgData['width'],"height":imgData['height']}})
+                        break
     if "article" in tweet:
         try:
             result = tweet["article"]["article_results"]["result"]
