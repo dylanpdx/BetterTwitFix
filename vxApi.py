@@ -1,5 +1,6 @@
 import html
 from datetime import datetime
+from flask import json
 from configHandler import config
 from utils import stripEndTCO
 
@@ -20,6 +21,48 @@ def getApiUserResponse(user):
         "fetched_on": int(datetime.now().timestamp()),
     }
 
+def getBestMediaUrl(mediaList):
+    # find the highest bitrate
+    best_bitrate = -1
+    besturl=""
+    for j in mediaList:
+        if j['content_type'] == "video/mp4" and '/hevc/' not in j["url"] and j['bitrate'] > best_bitrate:
+            besturl = j["url"]
+            best_bitrate = j['bitrate']
+    if "?tag=" in besturl:
+        besturl = besturl[:besturl.index("?tag=")]
+    return besturl
+
+def getExtendedVideoOrGifInfo(mediaEntry):
+    videoInfo = mediaEntry["video_info"]
+    info = {
+        "url": getBestMediaUrl(videoInfo["variants"]),
+        "type": "gif" if mediaEntry.get("type", "") == "animated_gif" else "video",
+        "size": {
+            "width": mediaEntry['original_info']["width"],
+            "height": mediaEntry['original_info']["height"]
+        },
+        "duration_millis": videoInfo.get("duration_millis", 0),
+        "thumbnail_url": mediaEntry.get("media_url_https", None),
+        "altText": mediaEntry.get("ext_alt_text", None),
+        "id_str": mediaEntry.get("id_str", None)
+    }
+    return info
+
+def getExtendedImageInfo(mediaEntry):
+    info = {
+        "url": mediaEntry.get("media_url_https", None),
+        "type": "image",
+        "size": {
+            "width": mediaEntry["original_info"]["width"],
+            "height": mediaEntry["original_info"]["height"]
+        },
+        "thumbnail_url": mediaEntry.get("media_url_https", None),
+        "altText": mediaEntry.get("ext_alt_text", None),
+        "id_str": mediaEntry.get("id_str", None)
+    }
+    return info
+    
 def getApiResponse(tweet,include_txt=False,include_rtf=False):
     tweetL = tweet["legacy"]
     if "user_result" in tweet["core"]:
@@ -69,63 +112,46 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
             for i in tmedia:
                 extendedInfo={}
                 if "video_info" in i:
-                    # find the highest bitrate
-                    best_bitrate = -1
-                    besturl=""
-                    for j in i["video_info"]["variants"]:
-                        if j['content_type'] == "video/mp4" and '/hevc/' not in j["url"] and j['bitrate'] > best_bitrate:
-                            besturl = j['url']
-                            best_bitrate = j['bitrate']
-                    if "?tag=" in besturl:
-                        besturl = besturl[:besturl.index("?tag=")]
-                    media.append(besturl)
-                    extendedInfo["url"] = besturl
-                    extendedInfo["type"] = "video"
-                    if (i["type"] == "animated_gif"):
-                        extendedInfo["type"] = "gif"
-                    altText = None
-                    extendedInfo["size"] = {"width":i["original_info"]["width"],"height":i["original_info"]["height"]}
-                    if "ext_alt_text" in i:
-                        altText=i["ext_alt_text"]
-                    if "duration_millis" in i["video_info"]:
-                        extendedInfo["duration_millis"] = i["video_info"]["duration_millis"]
-                    else:
-                        extendedInfo["duration_millis"] = 0
-                    extendedInfo["thumbnail_url"] = i["media_url_https"]
-                    extendedInfo["altText"] = altText
-                    extendedInfo["id_str"] = i["id_str"]
+                    extendedInfo = getExtendedVideoOrGifInfo(i)
+                    media.append(extendedInfo["url"])
                     media_extended.append(extendedInfo)
                 else:
-                    media.append(i["media_url_https"])
-                    extendedInfo["url"] = i["media_url_https"]
-                    altText=None
-                    if "ext_alt_text" in i:
-                        altText=i["ext_alt_text"]
-                    extendedInfo["altText"] = altText
-                    extendedInfo["type"] = "image"
-                    extendedInfo["size"] = {"width":i["original_info"]["width"],"height":i["original_info"]["height"]}
-                    extendedInfo["thumbnail_url"] = i["media_url_https"]
-                    extendedInfo["id_str"] = i["id_str"]
-                    media_extended.append(extendedInfo)
+                    media_extended.append(getExtendedImageInfo(i))
 
         if "hashtags" in tweetL["entities"]:
             for i in tweetL["entities"]["hashtags"]:
                 hashtags.append(i["text"])
-    elif "card" in tweet and 'name' in tweet['card'] and tweet['card']['name'] == "player":
-        width = None
-        height = None
-        vidUrl = None
-        for i in tweet['card']['binding_values']:
-            if i['key'] == 'player_stream_url':
-                vidUrl = i['value']['string_value']
-            elif i['key'] == 'player_width':
-                width = int(i['value']['string_value'])
-            elif i['key'] == 'player_height':
-                height = int(i['value']['string_value'])
-        if vidUrl != None and width != None and height != None:
-            media.append(vidUrl)
-            media_extended.append({"url":vidUrl,"type":"video","size":{"width":width,"height":height}})
-
+    elif "card" in tweet:
+        if 'name' in tweet['card'] and tweet['card']['name'] == "player":
+            width = None
+            height = None
+            vidUrl = None
+            for i in tweet['card']['binding_values']:
+                if i['key'] == 'player_stream_url':
+                    vidUrl = i['value']['string_value']
+                elif i['key'] == 'player_width':
+                    width = int(i['value']['string_value'])
+                elif i['key'] == 'player_height':
+                    height = int(i['value']['string_value'])
+            if vidUrl != None and width != None and height != None:
+                media.append(vidUrl)
+                media_extended.append({"url":vidUrl,"type":"video","size":{"width":width,"height":height}})
+        else:
+            for i in tweet['card']['binding_values']:
+                if i['key'] == 'unified_card' and 'value' in i and 'string_value' in i['value']:
+                    card = json.loads(i['value']['string_value'])
+                    media_key = card['component_objects']['media_1']['data']['id']
+                    media_entry = card['media_entities'][media_key]
+                    extendedInfo = getExtendedVideoOrGifInfo(media_entry)
+                    media.append(extendedInfo['url'])
+                    media_extended.append(extendedInfo)
+                    break
+                elif i['key'] == 'photo_image_full_size_large' and 'value' in i and 'image_value' in i['value']:
+                    imgData = i['value']['image_value']
+                    imgurl = imgData['url']
+                    media.append(imgurl)
+                    media_extended.append({"url":imgurl,"type":"image","size":{"width":imgData['width'],"height":imgData['height']}})
+                    break
     if "article" in tweet:
         try:
             result = tweet["article"]["article_results"]["result"]
