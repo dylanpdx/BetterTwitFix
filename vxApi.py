@@ -116,7 +116,9 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
                     media.append(extendedInfo["url"])
                     media_extended.append(extendedInfo)
                 else:
-                    media_extended.append(getExtendedImageInfo(i))
+                    extendedInfo = getExtendedImageInfo(i)
+                    media_extended.append(extendedInfo)
+                    media.append(extendedInfo["url"])
 
         if "hashtags" in tweetL["entities"]:
             for i in tweetL["entities"]["hashtags"]:
