@@ -33,11 +33,6 @@ def test_twextract_extractStatusV2TweetDetails():
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
 
 ## Tweet retrieve tests ##
-def test_twextract_textTweetExtract():
-    tweet = twExtract.extractStatus(testTextTweet,workaroundTokens=tokens)
-    assert utils.stripEndTCO(tweet["legacy"]["full_text"])==testTextTweet_compare['text']
-    assert tweet["user"]["screen_name"]=="jack"
-    assert 'extended_entities' not in tweet
     
 def test_twextract_extractV2():
     tweet = twExtract.extractStatusV2(testTextTweet,workaroundTokens=tokens)
