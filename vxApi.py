@@ -123,14 +123,15 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
         if "hashtags" in tweetL["entities"]:
             for i in tweetL["entities"]["hashtags"]:
                 hashtags.append(i["text"])
-    elif "card" in tweet:
+    elif "card" in tweet or "tweet_card" in tweet:
+        cardData = tweet["card" if "card" in tweet else "tweet_card"]
         bindingValues = None
-        if 'binding_values' in tweet['card']:
-            bindingValues = tweet['card']['binding_values']
-        elif 'legacy' in tweet['card'] and 'binding_values' in tweet['card']['legacy']:
-            bindingValues = tweet['card']['legacy']['binding_values']
+        if 'binding_values' in cardData:
+            bindingValues = cardData['binding_values']
+        elif 'legacy' in cardData and 'binding_values' in cardData['legacy']:
+            bindingValues = cardData['legacy']['binding_values']
         if bindingValues != None:
-            if 'name' in tweet['card'] and tweet['card']['name'] == "player":
+            if 'name' in cardData and cardData['name'] == "player":
                 width = None
                 height = None
                 vidUrl = None
@@ -147,9 +148,9 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
             else:
                 for i in bindingValues:
                     if i['key'] == 'unified_card' and 'value' in i and 'string_value' in i['value']:
-                        card = json.loads(i['value']['string_value'])
-                        media_key = card['component_objects']['media_1']['data']['id']
-                        media_entry = card['media_entities'][media_key]
+                        cardData = json.loads(i['value']['string_value'])
+                        media_key = cardData['component_objects']['media_1']['data']['id']
+                        media_entry = cardData['media_entities'][media_key]
                         extendedInfo = getExtendedVideoOrGifInfo(media_entry)
                         media.append(extendedInfo['url'])
                         media_extended.append(extendedInfo)
