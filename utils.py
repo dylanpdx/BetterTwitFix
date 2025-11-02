@@ -3,7 +3,7 @@ import io
 from configHandler import config
 
 pathregex = re.compile("\\w{1,15}\\/(status|statuses)\\/(\\d{2,20})")
-endTCOregex = re.compile("(^.*?) +https:\/\/t.co\/.*?$")
+endTCOregex = re.compile("(^.*?)[ \n]+https:\/\/t.co\/.*?$",flags=re.DOTALL)
 
 def getTweetIdFromUrl(url):
     match = pathregex.search(url)
