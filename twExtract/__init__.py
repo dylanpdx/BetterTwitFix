@@ -279,7 +279,7 @@ def extractStatusV2(url,workaroundTokens):
     def request_with_token(twid, authToken):
         vars = json.loads('{"includeTweetImpression":true,"includeHasBirdwatchNotes":false,"includeEditPerspective":false,"rest_ids":["x"],"includeEditControl":true,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true}')
         vars['rest_ids'][0] = str(twid)
-        tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2graphql_api}/TweetResultsByIdsQuery?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2Features)}",authToken=authToken,btoken=v2bearer)
+        tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2graphql_api}/TweetResultsByIdsQuery?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2Features)}",authToken=authToken)
         try:
             rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
             print(f"Twitter Token Rate limit remaining: {rateLimitRemaining}")
