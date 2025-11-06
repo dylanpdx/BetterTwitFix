@@ -13,11 +13,10 @@ import concurrent.futures
 bearer="Bearer AAAAAAAAAAAAAAAAAAAAAPYXBAAAAAAACLXUNDekMxqa8h%2F40K4moUkGsoc%3DTYfbDKbT3jJPCEVnMYqilB28NHfOPqkca3qaAxGfsyKCs0wRbw"
 v2bearer="Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 androidBearer="Bearer AAAAAAAAAAAAAAAAAAAAAFXzAwAAAAAAMHCxpeSDG1gLNLghVe8d74hl6k4%3DRUMF4xAQLsbeBhTSRrCiQpJtxoGWeyHrDb5te2jpGskWDFW82F"
-tweetdeckBearer="Bearer AAAAAAAAAAAAAAAAAAAAAFQODgEAAAAAVHTp76lzh3rFzcHbmHVvQxYYpTw%3DckAlMINMjmCwxUcaXbAN4XqJVdgMJaHqNOFgPMK0zN1qLqLQCF"
 
 requestUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0"
 
-bearerTokens=[tweetdeckBearer,bearer,v2bearer,androidBearer]
+bearerTokens=[bearer,v2bearer,androidBearer]
 
 guestToken=None
 guestTokenUses=0
@@ -36,7 +35,7 @@ androidGraphqlFeatures='{"grok_translations_community_note_translation_is_enable
 androidGraphql_api="k3rtLsS9kG5hI-Jr0dTMCg"
 
 tweetDetailGraphqlFeatures='{"rweb_tipjar_consumption_enabled":true,"responsive_web_graphql_exclude_directive_enabled":true,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_timeline_navigation_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"communities_web_enable_tweet_community_results_fetch":true,"c9s_tweet_anatomy_moderator_badge_enabled":true,"articles_preview_enabled":true,"tweetypie_unmention_optimization_enabled":true,"responsive_web_edit_tweet_api_enabled":true,"graphql_is_translatable_rweb_tweet_is_translatable_enabled":true,"view_counts_everywhere_api_enabled":true,"longform_notetweets_consumption_enabled":true,"responsive_web_twitter_article_tweet_consumption_enabled":true,"tweet_awards_web_tipping_enabled":false,"creator_subscriptions_quote_tweet_preview_enabled":false,"freedom_of_speech_not_reach_fetch_enabled":true,"standardized_nudges_misinfo":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"rweb_video_timestamps_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"longform_notetweets_inline_media_enabled":true,"responsive_web_enhance_cards_enabled":false}'
-tweetDetailGraphql_api="e7RKseIxLu7HgkWNKZ6qnw"
+tweetDetailGraphql_api="YVyS4SfwYW7Uw5qwy0mQCA"
 
 # this is for UserTweets endpoint
 tweetFeedGraphqlFeatures='{"rweb_video_screen_enabled":false,"profile_label_improvements_pcf_label_in_post_enabled":true,"rweb_tipjar_consumption_enabled":true,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_timeline_navigation_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"premium_content_api_read_enabled":false,"communities_web_enable_tweet_community_results_fetch":true,"c9s_tweet_anatomy_moderator_badge_enabled":true,"responsive_web_grok_analyze_button_fetch_trends_enabled":false,"responsive_web_grok_analyze_post_followups_enabled":true,"responsive_web_jetfuel_frame":false,"responsive_web_grok_share_attachment_enabled":true,"articles_preview_enabled":true,"responsive_web_edit_tweet_api_enabled":true,"graphql_is_translatable_rweb_tweet_is_translatable_enabled":true,"view_counts_everywhere_api_enabled":true,"longform_notetweets_consumption_enabled":true,"responsive_web_twitter_article_tweet_consumption_enabled":true,"tweet_awards_web_tipping_enabled":false,"responsive_web_grok_show_grok_translated_post":false,"responsive_web_grok_analysis_button_from_backend":true,"creator_subscriptions_quote_tweet_preview_enabled":false,"freedom_of_speech_not_reach_fetch_enabled":true,"standardized_nudges_misinfo":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"longform_notetweets_inline_media_enabled":true,"responsive_web_grok_image_annotation_enabled":true,"responsive_web_enhance_cards_enabled":false}'
@@ -116,7 +115,7 @@ def cycleBearerTokenGet(url,headers):
 
 def twitterApiGet(url,btoken=None,authToken=None,guestToken=None):
 
-    if authToken.startswith("oa|"):
+    if authToken != None and authToken.startswith("oa|"):
         url = url.replace("https://x.com/i/api/graphql/","https://api.twitter.com/graphql/")
         authToken = authToken[3:]
         key = authToken.split("|")[0]
@@ -132,7 +131,8 @@ def twitterApiGet(url,btoken=None,authToken=None,guestToken=None):
         response = requests.get(url,headers=headers)
     else:
         if btoken is None:
-            return cycleBearerTokenGet(url,getAuthHeaders(bearer,authToken=authToken,guestToken=guestToken))
+            btoken = v2bearer
+            #return cycleBearerTokenGet(url,getAuthHeaders(bearer,authToken=authToken,guestToken=guestToken))
         headers = getAuthHeaders(btoken,authToken=authToken,guestToken=guestToken)
         response = requests.get(url, headers=headers)
 
@@ -437,7 +437,10 @@ def extractStatusV2TweetDetail(url,workaroundTokens):
         return tweet
     return parallel_token_request(twid, tokens, request_with_token)
 
-def extractStatusV2Anon(url,x):
+def extractStatusV2Rest_Anon(url,workaroundTokens):
+    return extractStatusV2Rest(url,None)
+
+def extractStatusV2Rest(url,workaroundTokens):
     # get tweet ID
     m = re.search(pathregex, url)
     if m is None:
@@ -450,7 +453,17 @@ def extractStatusV2Anon(url,x):
     try:
         vars = json.loads('{"tweetId":"0","withCommunity":false,"includePromotedContent":false,"withVoice":false}')
         vars['tweetId'] = str(twid)
-        tweet = requests.get(f"https://x.com/i/api/graphql/{v2AnonGraphql_api}/TweetResultByRestId?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2AnonFeatures)}", headers=getAuthHeaders(v2bearer,guestToken=guestToken))
+        if workaroundTokens is not None and len(workaroundTokens) > 0:
+            tokens = workaroundTokens
+            random.shuffle(tokens)
+            for authToken in tokens:
+                try:
+                    tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2AnonGraphql_api}/TweetResultByRestId?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2AnonFeatures)}", btoken=v2bearer,authToken=authToken,guestToken=guestToken)
+                except Exception as e:
+                    continue
+        else:
+            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2AnonGraphql_api}/TweetResultByRestId?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2AnonFeatures)}", btoken=v2bearer,guestToken=guestToken)
+        
         try:
             rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
             print(f"Twitter Anon Token Rate limit remaining: {rateLimitRemaining}")
@@ -498,7 +511,7 @@ def fixTweetData(tweet):
 
 def extractStatus(url,workaroundTokens=None):
     # TODO: commented out methods are too slow/unreliable at the moment
-    methods=[extractStatusV2Anon,extractStatusV2,extractStatusV2Android]#,extractStatusV2TweetDetail]
+    methods=[extractStatusV2Rest_Anon,extractStatusV2,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2TweetDetail]
     for method in methods:
         try:
             result = method(url,workaroundTokens)

@@ -9,14 +9,14 @@ def test_twextract_syndicationAPI():
     tweet = twExtract.extractStatus_syndication(testMediaTweet,workaroundTokens=tokens)
     assert utils.stripEndTCO(utils.stripEndTCO(tweet["full_text"]))==testMediaTweet_compare['text']
 
-def test_twextract_extractStatusV2Anon():
-    tweet = twExtract.extractStatusV2Anon(testTextTweet,None)['legacy']
+def test_twextract_extractStatusV2Rest():
+    tweet = twExtract.extractStatusV2Rest(testTextTweet,None)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testTextTweet_compare['text']
-    tweet = twExtract.extractStatusV2Anon(testVideoTweet,None)['legacy']
+    tweet = twExtract.extractStatusV2Rest(testVideoTweet,None)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testVideoTweet_compare['text']
-    tweet = twExtract.extractStatusV2Anon(testMediaTweet,None)['legacy']
+    tweet = twExtract.extractStatusV2Rest(testMediaTweet,None)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
-    tweet = twExtract.extractStatusV2Anon(testMultiMediaTweet,None)['legacy']
+    tweet = twExtract.extractStatusV2Rest(testMultiMediaTweet,None)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])[:94]==testMultiMediaTweet_compare['text'][:94]
     
 
