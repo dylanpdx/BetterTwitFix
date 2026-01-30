@@ -83,9 +83,12 @@ def determineMediaToEmbed(tweetData,embedIndex = -1,convertGif = True):
             return media
         elif media['type'] == "video" or media['type'] == "gif":
             if media['type'] == "gif" and convertGif:
-                if config['config']['gifConvertAPI'] != "" and config['config']['gifConvertAPI'] != "none":
+                if config['config']['gifConvertAPI'] != "" and config['config']['gifConvertAPI'] != "none" and config['config']['gifConvertAPI'] != "local":
+                    gcApi = config['config']['gifConvertAPI']
+                    #if gcApi == "local": # TODO
+                        #gcApi = f"{config['config']['url']}/gifconvert"
                     vurl=media['originalUrl'] if 'originalUrl' in media else media['url']
-                    media['url'] = config['config']['gifConvertAPI'] + "/convert?url=" + vurl
+                    media['url'] = gcApi + "/convert?url=" + vurl
                     suffix += " • GIF"
                     media["suffix"] = suffix
         return media
