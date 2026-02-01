@@ -20,6 +20,10 @@ def test_twextract_extractStatusV2Rest():
     assert utils.stripEndTCO(tweet["full_text"])[:94]==testMultiMediaTweet_compare['text'][:94]
     
 
+def test_twextract_v2API_Anon():
+    tweet = twExtract.extractStatusV2Rest_Anon(testMediaTweet,workaroundTokens=tokens)['legacy']
+    assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
+
 def test_twextract_v2API():
     tweet = twExtract.extractStatusV2(testMediaTweet,workaroundTokens=tokens)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']

@@ -31,8 +31,8 @@ v2AnonFeatures='{"creator_subscriptions_tweet_preview_api_enabled":true,"premium
 v2AnonGraphql_api="wqi5M7wZ7tW-X9S2t-Mqcg"
 gt_pattern = r'document\.cookie="gt=([^;]+);'
 
-androidGraphqlFeatures='{"grok_translations_community_note_translation_is_enabled":false,"super_follow_badge_privacy_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"super_follow_user_api_enabled":true,"profile_label_improvements_pcf_label_in_profile_enabled":true,"premium_content_api_read_enabled":false,"grok_translations_community_note_auto_translation_is_enabled":false,"android_graphql_skip_api_media_color_palette":true,"tweetypie_unmention_optimization_enabled":true,"longform_notetweets_consumption_enabled":true,"subscriptions_verification_info_enabled":true,"blue_business_profile_image_shape_enabled":true,"super_follow_exclusive_tweet_notifications_enabled":true,"longform_notetweets_inline_media_enabled":true,"grok_android_analyze_trend_fetch_enabled":false,"unified_cards_ad_metadata_container_dynamic_card_content_query_enabled":true,"super_follow_tweet_api_enabled":true,"articles_api_enabled":true,"creator_subscriptions_tweet_preview_api_enabled":true,"freedom_of_speech_not_reach_fetch_enabled":true,"grok_translations_timeline_user_bio_auto_translation_is_enabled":false,"grok_translations_post_auto_translation_is_enabled":false,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"immersive_video_status_linkable_timestamps":true,"profile_label_improvements_pcf_label_in_post_enabled":true}'
-androidGraphql_api="k3rtLsS9kG5hI-Jr0dTMCg"
+androidGraphqlFeatures='{"grok_translations_community_note_translation_is_enabled":false,"super_follow_badge_privacy_enabled":true,"unified_cards_destination_url_params_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"super_follow_user_api_enabled":true,"profile_label_improvements_pcf_label_in_profile_enabled":true,"premium_content_api_read_enabled":false,"grok_translations_community_note_auto_translation_is_enabled":false,"android_graphql_skip_api_media_color_palette":true,"tweetypie_unmention_optimization_enabled":true,"longform_notetweets_consumption_enabled":true,"subscriptions_verification_info_enabled":true,"blue_business_profile_image_shape_enabled":true,"super_follow_exclusive_tweet_notifications_enabled":true,"longform_notetweets_inline_media_enabled":true,"grok_android_analyze_trend_fetch_enabled":false,"unified_cards_ad_metadata_container_dynamic_card_content_query_enabled":true,"super_follow_tweet_api_enabled":true,"articles_api_enabled":true,"android_ad_formats_media_component_render_overlay_enabled":true,"creator_subscriptions_tweet_preview_api_enabled":true,"freedom_of_speech_not_reach_fetch_enabled":true,"grok_translations_timeline_user_bio_auto_translation_is_enabled":false,"grok_translations_post_auto_translation_is_enabled":false,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"immersive_video_status_linkable_timestamps":true,"profile_label_improvements_pcf_label_in_post_enabled":true}'
+androidGraphql_api="Wrspae-uyGj-nWPyUqdUag"
 
 tweetDetailGraphqlFeatures='{"rweb_tipjar_consumption_enabled":true,"responsive_web_graphql_exclude_directive_enabled":true,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_timeline_navigation_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"communities_web_enable_tweet_community_results_fetch":true,"c9s_tweet_anatomy_moderator_badge_enabled":true,"articles_preview_enabled":true,"tweetypie_unmention_optimization_enabled":true,"responsive_web_edit_tweet_api_enabled":true,"graphql_is_translatable_rweb_tweet_is_translatable_enabled":true,"view_counts_everywhere_api_enabled":true,"longform_notetweets_consumption_enabled":true,"responsive_web_twitter_article_tweet_consumption_enabled":true,"tweet_awards_web_tipping_enabled":false,"creator_subscriptions_quote_tweet_preview_enabled":false,"freedom_of_speech_not_reach_fetch_enabled":true,"standardized_nudges_misinfo":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"rweb_video_timestamps_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"longform_notetweets_inline_media_enabled":true,"responsive_web_enhance_cards_enabled":false}'
 tweetDetailGraphql_api="YVyS4SfwYW7Uw5qwy0mQCA"
@@ -113,7 +113,7 @@ def cycleBearerTokenGet(url,headers):
         return tweet
     raise TwExtractError(400, "Extract error")
 
-def twitterApiGet(url,btoken=None,authToken=None,guestToken=None):
+def twitterApiGet(url,btoken=None,authToken=None,guestToken=None,userAgent=None):
 
     if authToken != None and authToken.startswith("oa|"):
         url = url.replace("https://x.com/i/api/graphql/","https://api.twitter.com/graphql/")
@@ -125,6 +125,8 @@ def twitterApiGet(url,btoken=None,authToken=None,guestToken=None):
         hdr = getAuthHeaders(androidBearer)
         del hdr["Authorization"]
         hdr["X-Twitter-Client"] = "TwitterAndroid"
+        if userAgent is not None:
+            hdr["User-Agent"] = userAgent
 
         uri, headers, body = twt.sign(url, headers=hdr,realm="http://api.twitter.com/")
 
@@ -139,6 +141,7 @@ def twitterApiGet(url,btoken=None,authToken=None,guestToken=None):
     return response
 
 def getAuthHeaders(btoken,authToken=None,guestToken=None):
+
     csrfToken=str(uuid.uuid4()).replace('-', '')
     headers = {"x-twitter-active-user":"yes","x-twitter-client-language":"en","x-csrf-token":csrfToken,"User-Agent":requestUserAgent}
     headers['Authorization'] = btoken
@@ -332,7 +335,7 @@ def extractStatusV2Android(url,workaroundTokens):
         try:
             vars = json.loads('{"referrer":"home","includeTweetImpression":true,"includeHasBirdwatchNotes":false,"isReaderMode":false,"includeEditPerspective":false,"includeEditControl":true,"focalTweetId":0,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true}')
             vars['focalTweetId'] = int(twid)
-            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{androidGraphql_api}/ConversationTimelineV2?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(androidGraphqlFeatures)}", authToken=authToken,btoken=androidBearer)
+            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{androidGraphql_api}/ConversationTimelineV2?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(androidGraphqlFeatures)}", authToken=authToken,btoken=androidBearer,userAgent="TwitterAndroid/11.61.0-release.0 (311610000-r-0) G011A/9 (google;G011A;google;G011A;0;;1;2016)")
             try:
                 rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
                 print(f"Twitter Android Token Rate limit remaining: {rateLimitRemaining}")
