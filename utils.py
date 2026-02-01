@@ -88,7 +88,7 @@ def determineMediaToEmbed(tweetData,embedIndex = -1,convertGif = True):
                     #if gcApi == "local": # TODO
                         #gcApi = f"{config['config']['url']}/gifconvert"
                     vurl=media['originalUrl'] if 'originalUrl' in media else media['url']
-                    media['url'] = gcApi + "/convert?url=" + vurl
+                    media['url'] = gcApi + "/convert.avif?url=" + vurl
                     suffix += " • GIF"
                     media["suffix"] = suffix
         return media

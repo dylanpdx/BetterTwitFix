@@ -439,8 +439,13 @@ def twitfix(sub_path):
                 suffix = media["suffix"]
             if media['type'] == "image":
                 return Response(renderImageTweetEmbed(tweetData,media['url'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
-            elif media['type'] == "video" or media['type'] == "gif":
+            elif media['type'] == "video":
                 return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+            elif media['type'] == "gif":
+                if "originalUrl" in media and media["url"] != media["originalUrl"]:
+                    return Response(renderImageTweetEmbed(tweetData,media['url'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+                else:
+                    return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
 
     return message(msgs.failedToScan)
 

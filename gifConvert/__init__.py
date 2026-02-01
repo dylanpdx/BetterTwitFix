@@ -21,55 +21,44 @@ else:
 def extractStatus(url):
     return ""
 
-def get_video_frame_rate(filename):
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-select_streams",
-            "v",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            "-show_entries",
-            "stream=r_frame_rate",
-            filename,
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    result_string = result.stdout.decode('utf-8').split()[0].split('/')
-    fps = float(result_string[0])/float(result_string[1])
-    return fps
+def convert_video_to_gif(filename):
+    try:
+        new_filename = tempfile.mkstemp(suffix=".gif")[1]
+        print("converting gif w gifski")
+        p_ffmpeg = subprocess.Popen(["ffmpeg", "-i", filename, "-f", "yuv4mpegpipe", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        p_gifski = subprocess.Popen(["gifski","--quality","70","--lossy-quality","30","-o", new_filename, "-"], stdin=p_ffmpeg.stdout, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
-def get_video_length_seconds(filename):
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            filename,
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    result_string = result.stdout.decode('utf-8').split()[0]
-    return float(result_string)
-
-def loop_video_until_length(filename, length):
-    # use stream_loop to loop video until it's at least length seconds long
-    video_length = get_video_length_seconds(filename)
-    if video_length < length:
-        loops = int(length/video_length)
-        new_filename = tempfile.mkstemp(suffix=".mp4")[1]
-        subprocess.call(["ffmpeg","-stream_loop",str(loops),"-i",filename,"-c","copy","-y",new_filename],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
-        
-        return new_filename
-    else:
+        p_ffmpeg.stdout.close()
+        ret_gifski = p_gifski.wait()
+        ret_ffmpeg = p_ffmpeg.wait()
+        if ret_gifski != 0:
+            print("err: gifski exited with code:", ret_gifski)
+        if ret_ffmpeg != 0:
+            print("err: ffmpeg exited with code:", ret_ffmpeg)
+        if os.path.isfile(new_filename) and os.path.getsize(new_filename) > 0:
+            return new_filename
+        else:
+            print("gifski failed to convert gif")
+            return filename
+    except Exception as e:
+        print("error converting gif (convert_video_to_gif):")
+        print(e)
+        return filename
+    
+def convert_video_to_avif(filename):
+    try:
+        fd,new_filename = tempfile.mkstemp(suffix=".avif")
+        os.close(fd)
+        print("converting gif w ffmpeg to avif")
+        subprocess.call(["ffmpeg","-nostdin","-y", "-i", filename,"-pix_fmt","yuv420p","-an","-c:v","libsvtav1","-crf","30","-b:v","0","-threads","4", new_filename], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        if os.path.isfile(new_filename) and os.path.getsize(new_filename) > 0:
+            return new_filename
+        else:
+            print("ffmpeg failed to convert avif")
+            return filename
+    except Exception as e:
+        print("error converting avif (convert_video_to_avif):")
+        print(e)
         return filename
 
 def redir(url):
@@ -99,7 +88,7 @@ def lambda_handler(event, context):
     
         if useBucket:
             id=re.search(r"https:\/\/video\.twimg\.com\/tweet_video\/(.*?)\..*",url).group(1)
-            bfilename = str(id)+".mp4"
+            bfilename = str(id)+".avif"
             furl=f"https://gifs.vxtwitter.com/{bfilename}" #f"https://{bucketname}.s3.amazonaws.com/{bfilename}"
             print("get req for: "+url)
             try:
@@ -121,7 +110,7 @@ def lambda_handler(event, context):
             print("error downloading video")
             return redir(url)
     
-        videoLocationLooped = loop_video_until_length(videoLocation, 30)
+        videoLocationLooped = convert_video_to_avif(videoLocation)
         if videoLocationLooped != videoLocation:
             os.remove(videoLocation)
             videoLocation = videoLocationLooped
@@ -137,7 +126,7 @@ def lambda_handler(event, context):
                     'statusCode': 200,
                     "headers": 
                     {
-                        "Content-Type": "video/mp4"
+                        "Content-Type": "image/avif",
                     },
                     'body': encoded_string,
                     'isBase64Encoded': True
