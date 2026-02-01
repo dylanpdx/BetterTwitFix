@@ -35,7 +35,10 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
     if media is not None:
         media = deepcopy(media)
         if media['type'] == "gif":
-            media['type'] = "gifv"
+            if "/convert.avif" in media['url']:
+                media['type'] = "image"
+            else:
+                media['type'] = "gifv"
         if 'thumbnail_url' not in media:
             media['thumbnail_url'] = media['url']
         if media['type'] == "image" and "?" not in media['url']:

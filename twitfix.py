@@ -433,7 +433,8 @@ def twitfix(sub_path):
         elif not embeddingMedia:
             return Response(renderTextTweetEmbed(tweetData),headers={"Cache-Tag": "embed"})
         else:
-            media = determineMediaToEmbed(embedTweetData,embedIndex)
+            tryGifConversion = "Discord" in user_agent
+            media = determineMediaToEmbed(embedTweetData,embedIndex,convertGif=tryGifConversion)
             suffix=""
             if "suffix" in media:
                 suffix = media["suffix"]
@@ -442,7 +443,7 @@ def twitfix(sub_path):
             elif media['type'] == "video":
                 return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
             elif media['type'] == "gif":
-                if "originalUrl" in media and media["url"] != media["originalUrl"]:
+                if "originalUrl" in media and media["url"] != media["originalUrl"] and tryGifConversion:
                     return Response(renderImageTweetEmbed(tweetData,media['url'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
                 else:
                     return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
