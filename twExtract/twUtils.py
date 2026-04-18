@@ -3,8 +3,9 @@ import hashlib
 import base64
 import uuid
 from x_client_transaction import ClientTransaction
-from x_client_transaction.utils import handle_x_migration
+from x_client_transaction.utils import get_ondemand_file_url, generate_headers
 import requests
+import bs4
 digits = "0123456789abcdefghijklmnopqrstuvwxyz"
 
 def baseConversion(x, base):
@@ -49,6 +50,14 @@ def get_twitter_homepage(headers=None):
     return response
 
 def generate_transaction_id(method: str, path: str,headers=None) -> str:
-    ct = ClientTransaction(get_twitter_homepage(headers=headers))
+    session = requests.Session()
+    session.headers = generate_headers()
+    home_page = session.get(url="https://x.com")
+    home_page_response = bs4.BeautifulSoup(home_page.content, 'html.parser')
+    ondemand_file_url = get_ondemand_file_url(response=home_page_response)
+    ondemand_file = session.get(url=ondemand_file_url)
+    ondemand_file_response = bs4.BeautifulSoup(ondemand_file.content, 'html.parser')
+
+    ct = ClientTransaction(home_page_response=home_page_response, ondemand_file_response=ondemand_file_response)
     transaction_id = ct.generate_transaction_id(method=method, path=path)
     return transaction_id
