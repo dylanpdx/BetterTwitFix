@@ -113,7 +113,7 @@ def cycleBearerTokenGet(url,headers):
         return tweet
     raise TwExtractError(400, "Extract error")
 
-def twitterApiGet(url,btoken=None,authToken=None,guestToken=None,userAgent=None):
+def twitterApiGet(url,btoken=None,authToken=None,guestToken=None,userAgent=None,language=None):
 
     if authToken != None and authToken.startswith("oa|"):
         url = url.replace("https://x.com/i/api/graphql/","https://api.twitter.com/graphql/")
@@ -122,7 +122,7 @@ def twitterApiGet(url,btoken=None,authToken=None,guestToken=None,userAgent=None)
         secret = authToken.split("|")[1]
 
         twt = oauth1.Client(client_key='3nVuSoBZnx6U4vzUxf5w',client_secret='Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys',resource_owner_key=key,resource_owner_secret=secret)
-        hdr = getAuthHeaders(androidBearer)
+        hdr = getAuthHeaders(androidBearer,language=language)
         del hdr["Authorization"]
         hdr["X-Twitter-Client"] = "TwitterAndroid"
         if userAgent is not None:
@@ -135,12 +135,12 @@ def twitterApiGet(url,btoken=None,authToken=None,guestToken=None,userAgent=None)
         if btoken is None:
             btoken = v2bearer
             #return cycleBearerTokenGet(url,getAuthHeaders(bearer,authToken=authToken,guestToken=guestToken))
-        headers = getAuthHeaders(btoken,authToken=authToken,guestToken=guestToken)
+        headers = getAuthHeaders(btoken,authToken=authToken,guestToken=guestToken,language=language)
         response = requests.get(url, headers=headers)
 
     return response
 
-def getAuthHeaders(btoken,authToken=None,guestToken=None):
+def getAuthHeaders(btoken,authToken=None,guestToken=None,language=None):
 
     csrfToken=str(uuid.uuid4()).replace('-', '')
     headers = {"x-twitter-active-user":"yes","x-twitter-client-language":"en","x-csrf-token":csrfToken,"User-Agent":requestUserAgent}
@@ -151,6 +151,9 @@ def getAuthHeaders(btoken,authToken=None,guestToken=None):
         headers["x-twitter-auth-type"] = "OAuth2Session"
     if guestToken is not None:
         headers["x-guest-token"] = guestToken
+
+    if language is not None:
+        headers["x-twitter-client-language"] = language
 
     return headers
 
@@ -268,7 +271,7 @@ def extractStatus_twExtractProxy(url,workaroundTokens=None):
             continue
         return output
 
-def extractStatusV2(url,workaroundTokens):
+def extractStatusV2(url,workaroundTokens,tlLanguage=None):
     # get tweet ID
     m = re.search(pathregex, url)
     if m is None:
@@ -282,7 +285,7 @@ def extractStatusV2(url,workaroundTokens):
     def request_with_token(twid, authToken):
         vars = json.loads('{"includeTweetImpression":true,"includeHasBirdwatchNotes":false,"includeEditPerspective":false,"rest_ids":["x"],"includeEditControl":true,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true}')
         vars['rest_ids'][0] = str(twid)
-        tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2graphql_api}/TweetResultsByIdsQuery?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2Features)}",authToken=authToken)
+        tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2graphql_api}/TweetResultsByIdsQuery?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2Features)}",authToken=authToken,language=tlLanguage)
         try:
             rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
             print(f"Twitter Token Rate limit remaining: {rateLimitRemaining}")
@@ -321,7 +324,7 @@ def extractStatusV2(url,workaroundTokens):
         return tweet
     return parallel_token_request(twid, tokens, request_with_token)
 
-def extractStatusV2Android(url,workaroundTokens):
+def extractStatusV2Android(url,workaroundTokens,tlLanguage=None):
     # get tweet ID
     m = re.search(pathregex, url)
     if m is None:
@@ -335,7 +338,7 @@ def extractStatusV2Android(url,workaroundTokens):
         try:
             vars = json.loads('{"referrer":"home","includeTweetImpression":true,"includeHasBirdwatchNotes":false,"isReaderMode":false,"includeEditPerspective":false,"includeEditControl":true,"focalTweetId":0,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true}')
             vars['focalTweetId'] = int(twid)
-            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{androidGraphql_api}/ConversationTimelineV2?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(androidGraphqlFeatures)}", authToken=authToken,btoken=androidBearer,userAgent="TwitterAndroid/11.61.0-release.0 (311610000-r-0) G011A/9 (google;G011A;google;G011A;0;;1;2016)")
+            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{androidGraphql_api}/ConversationTimelineV2?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(androidGraphqlFeatures)}", authToken=authToken,btoken=androidBearer,userAgent="TwitterAndroid/11.61.0-release.0 (311610000-r-0) G011A/9 (google;G011A;google;G011A;0;;1;2016)",language=tlLanguage)
             try:
                 rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
                 print(f"Twitter Android Token Rate limit remaining: {rateLimitRemaining}")
@@ -380,7 +383,7 @@ def extractStatusV2Android(url,workaroundTokens):
         return tweet
     return parallel_token_request(twid, tokens, request_with_token)
 
-def extractStatusV2TweetDetail(url,workaroundTokens):
+def extractStatusV2TweetDetail(url,workaroundTokens,tlLanguage=None):
     # get tweet ID
     m = re.search(pathregex, url)
     if m is None:
@@ -395,7 +398,7 @@ def extractStatusV2TweetDetail(url,workaroundTokens):
         try:
             vars = json.loads('{"focalTweetId":"0","with_rux_injections":false,"includePromotedContent":true,"withCommunity":true,"withQuickPromoteEligibilityTweetFields":true,"withBirdwatchNotes":true,"withVoice":true,"withV2Timeline":true}')
             vars['focalTweetId'] = str(twid)
-            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{tweetDetailGraphql_api}/TweetDetail?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(tweetDetailGraphqlFeatures)}", authToken=authToken,btoken=v2bearer)
+            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{tweetDetailGraphql_api}/TweetDetail?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(tweetDetailGraphqlFeatures)}", authToken=authToken,btoken=v2bearer,language=tlLanguage)
             try:
                 rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
                 print(f"Twitter Token Rate limit remaining: {rateLimitRemaining}")
@@ -440,10 +443,10 @@ def extractStatusV2TweetDetail(url,workaroundTokens):
         return tweet
     return parallel_token_request(twid, tokens, request_with_token)
 
-def extractStatusV2Rest_Anon(url,workaroundTokens):
-    return extractStatusV2Rest(url,None)
+def extractStatusV2Rest_Anon(url,workaroundTokens,tlLanguage=None):
+    return extractStatusV2Rest(url,None,tlLanguage=tlLanguage)
 
-def extractStatusV2Rest(url,workaroundTokens):
+def extractStatusV2Rest(url,workaroundTokens,tlLanguage=None):
     # get tweet ID
     m = re.search(pathregex, url)
     if m is None:
@@ -461,11 +464,11 @@ def extractStatusV2Rest(url,workaroundTokens):
             random.shuffle(tokens)
             for authToken in tokens:
                 try:
-                    tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2AnonGraphql_api}/TweetResultByRestId?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2AnonFeatures)}", btoken=v2bearer,authToken=authToken,guestToken=guestToken)
+                    tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2AnonGraphql_api}/TweetResultByRestId?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2AnonFeatures)}", btoken=v2bearer,authToken=authToken,guestToken=guestToken,language=tlLanguage)
                 except Exception as e:
                     continue
         else:
-            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2AnonGraphql_api}/TweetResultByRestId?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2AnonFeatures)}", btoken=v2bearer,guestToken=guestToken)
+            tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2AnonGraphql_api}/TweetResultByRestId?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2AnonFeatures)}", btoken=v2bearer,guestToken=guestToken,language=tlLanguage)
         
         try:
             rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
@@ -512,12 +515,13 @@ def fixTweetData(tweet):
         pass
     return tweet
 
-def extractStatus(url,workaroundTokens=None):
-    # TODO: commented out methods are too slow/unreliable at the moment
+def extractStatus(url,workaroundTokens=None,tlLanguage=None):
     methods=[extractStatusV2Rest_Anon,extractStatusV2,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2TweetDetail]
+    if tlLanguage is not None: # prioritize endpoints that return translations
+        methods = [extractStatusV2Rest,extractStatusV2TweetDetail,extractStatusV2Android,extractStatusV2,extractStatusV2Rest_Anon]
     for method in methods:
         try:
-            result = method(url,workaroundTokens)
+            result = method(url,workaroundTokens,tlLanguage=tlLanguage)
             if 'legacy' not in result:
                 print(f"{method.__name__} method failed: Legacy not found for {url}")
                 # try another method

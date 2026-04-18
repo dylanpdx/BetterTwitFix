@@ -8,11 +8,20 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
 
     if tweetData['replyingTo'] is not None:
         content += f"<blockquote>↪️ <i>Replying to @{tweetData['replyingTo']}</i></blockquote>"
-    content+=f"<p>{tweetData['text']}</p>"
+
+    mainText = tweetData['text']
+    if tweetData["translation"] is not None:
+        content += f"<blockquote>🌐 <i>{tweetData['translation']['source_language'].upper()}→{tweetData['translation']['destination_language'].upper()}</i></blockquote>"
+        mainText=tweetData['translation']["text"]
+        
+    content+=f"<p>{mainText}</p>"
 
     attachments=[]
     if tweetData['qrt'] is not None:
-        content += f"<blockquote><b>QRT: <a href=\"{tweetData['qrtURL']}\">{tweetData['qrt']['user_screen_name']}</a></b><br>{tweetData['qrt']['text']}</blockquote>"
+        qrtText = tweetData['qrt']['text']
+        if "translation" in tweetData['qrt'] and tweetData['qrt']["translation"] is not None:
+            qrtText = tweetData['qrt']["translation"]["text"]
+        content += f"<blockquote><b>QRT: <a href=\"{tweetData['qrtURL']}\">{tweetData['qrt']['user_screen_name']}</a></b><br>{qrtText}</blockquote>"
     if tweetData['pollData'] is not None:
         content += f"<p>{msgs.genPollDisplay(tweetData['pollData'])}</p>"
         content += "</p>"

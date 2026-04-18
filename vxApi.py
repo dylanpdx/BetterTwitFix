@@ -77,6 +77,7 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
     oldTweetVersion = False
     tweetArticle=None
     lang=None
+    translation=None
 
     if "screen_name" not in userL:
         userL["screen_name"] = user["core"]["screen_name"]
@@ -84,6 +85,14 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
         userL["name"] = user["core"]["name"]
     if "profile_image_url_https" not in userL:
         userL["profile_image_url_https"] = user["avatar"]["image_url"]
+
+    if "grok_translated_post_with_availability" in tweet and tweet["grok_translated_post_with_availability"]["is_available"] and "data" in tweet["grok_translated_post_with_availability"]:
+        tlData = tweet["grok_translated_post_with_availability"]["data"]
+        translation = {
+            "source_language":tlData["source_language"],
+            "destination_language":tlData["destination_language"],
+            "text":tlData["translation"]
+        }
 
     #editedTweet=False
     try:
@@ -305,6 +314,7 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
         "replyingToID": replyingToID,
         "fetched_on": int(datetime.now().timestamp()),
         "retweetURL":retweetURL,
+        "translation":translation
     }
     try:
         apiObject["date_epoch"] = int(datetime.strptime(tweetL["created_at"], "%a %b %d %H:%M:%S %z %Y").timestamp())

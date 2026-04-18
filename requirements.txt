@@ -8,4 +8,4 @@ Werkzeug==2.3.7
 numerize==0.12
 oauthlib==3.2.2
 PyRTF3==0.47.5
-XClientTransaction==0.0.2
+XClientTransaction==1.0.2

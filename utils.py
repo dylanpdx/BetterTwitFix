@@ -92,3 +92,14 @@ def determineMediaToEmbed(tweetData,embedIndex = -1,convertGif = True):
                     suffix += " • GIF"
                     media["suffix"] = suffix
         return media
+    
+def indexOfAny(list,items,caseInsensitive=False):
+    if caseInsensitive:
+        list = [item.upper() for item in list]
+        items = [item.upper() for item in items]
+    for item in items:
+        try:
+            return list.index(item)
+        except:
+            continue
+    return -1

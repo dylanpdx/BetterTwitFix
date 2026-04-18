@@ -14,7 +14,7 @@ import msgs
 import twExtract as twExtract
 from cache import addVnfToLinkCache,getVnfFromLinkCache
 import vxlogging as log
-from utils import getTweetIdFromUrl, pathregex, determineMediaToEmbed, determineEmbedTweet, BytesIOWrapper, fixMedia
+from utils import getTweetIdFromUrl, pathregex, determineMediaToEmbed, determineEmbedTweet, BytesIOWrapper, fixMedia, indexOfAny
 from vxApi import getApiResponse, getApiUserResponse
 from urllib.parse import urlparse 
 from PyRTF.Elements import Document
@@ -22,11 +22,13 @@ from PyRTF.document.section import Section
 from PyRTF.document.paragraph import Paragraph
 from copy import deepcopy
 import json
-import datetime
+import translation
 import activity as activitymg
 app = Flask(__name__)
 CORS(app)
 user_agent=""
+
+activityseparator="zqj"
 
 staticFiles = { # TODO: Use flask static files instead of this
     "favicon.ico": {"mime": "image/vnd.microsoft.icon","path": "favicon.ico"},
@@ -82,7 +84,11 @@ def generateActivityLink(tweetData,media=None,mediatype=None,embedIndex=-1):
         return None
     try:
         embedIndex = embedIndex+1
-        return f"{config['config']['url']}/users/{tweetData['user_screen_name']}/statuses/{str(embedIndex)}{tweetData['tweetID']}"
+
+        extras=""
+        if tweetData["translation"] is not None:
+            extras+=activityseparator+tweetData["translation"]["destination_language"]
+        return f"{config['config']['url']}/users/{tweetData['user_screen_name']}/statuses/{str(embedIndex)}{activityseparator}{tweetData['tweetID']}{extras}"
     except Exception as e:
         log.error("Error generating activity link: "+str(e))
         return None
@@ -95,7 +101,7 @@ def getAppName(tweetData,appnameSuffix=""):
 
 def renderImageTweetEmbed(tweetData,image,appnameSuffix="",embedIndex=-1):
     qrt = tweetData['qrt']
-    embedDesc = msgs.formatEmbedDesc("Image",tweetData['text'],qrt,tweetData['pollData'])
+    embedDesc = msgs.formatEmbedDesc("Image",tweetData['text'],qrt,tweetData['pollData'],tweetData["translation"])
 
     if image.startswith("https://pbs.twimg.com") and "?" not in image:
         image = f"{image}?name=orig"
@@ -115,7 +121,7 @@ def renderImageTweetEmbed(tweetData,image,appnameSuffix="",embedIndex=-1):
 
 def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1):
     qrt = tweetData['qrt']
-    embedDesc = msgs.formatEmbedDesc("Video",tweetData['text'],qrt,tweetData['pollData'])
+    embedDesc = msgs.formatEmbedDesc("Video",tweetData['text'],qrt,tweetData['pollData'],tweetData["translation"])
 
     mediaInfo=fixMedia(mediaInfo)
 
@@ -138,7 +144,7 @@ def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1):
 
 def renderTextTweetEmbed(tweetData,appnameSuffix=""):
     qrt = tweetData['qrt']
-    embedDesc = msgs.formatEmbedDesc("Text",tweetData['text'],qrt,tweetData['pollData'])
+    embedDesc = msgs.formatEmbedDesc("Text",tweetData['text'],qrt,tweetData['pollData'],tweetData["translation"])
 
     return render_template("text.html",
                     tweet=tweetData,
@@ -154,7 +160,7 @@ def renderTextTweetEmbed(tweetData,appnameSuffix=""):
 
 def renderArticleTweetEmbed(tweetData,appnameSuffix=""):
     articlePreview=tweetData['article']["title"]+"\n\n"+tweetData['article']["preview_text"]+"…"
-    embedDesc = msgs.formatEmbedDesc("Image",articlePreview,None,None)
+    embedDesc = msgs.formatEmbedDesc("Image",articlePreview,None,None,None)
 
     return render_template("image.html",
                     tweet=tweetData,
@@ -260,9 +266,9 @@ def userJson():
         },
     }
 
-def getTweetData(twitter_url,include_txt="false",include_rtf="false"):
+def getTweetData(twitter_url,include_txt="false",include_rtf="false",tlLanguage=None):
     cachedVNF = getVnfFromLinkCache(twitter_url)
-    if cachedVNF is not None and include_txt == "false" and include_rtf == "false":
+    if cachedVNF is not None and include_txt == "false" and include_rtf == "false" and tlLanguage is None:
         return cachedVNF
 
     try:
@@ -270,7 +276,7 @@ def getTweetData(twitter_url,include_txt="false",include_rtf="false"):
             workaroundTokens = config['config']['workaroundTokens'].split(",")
         else:
             workaroundTokens = None
-        rawTweetData = twExtract.extractStatus(twitter_url,workaroundTokens=workaroundTokens)
+        rawTweetData = twExtract.extractStatus(twitter_url,workaroundTokens=workaroundTokens,tlLanguage=tlLanguage)
     except:
         rawTweetData = None
     if rawTweetData == None or 'error' in rawTweetData:
@@ -281,7 +287,15 @@ def getTweetData(twitter_url,include_txt="false",include_rtf="false"):
     tweetData = getApiResponse(rawTweetData,include_txt,include_rtf)
     if tweetData is None:
         return None
-    if include_txt == "false" and include_rtf == "false":
+    
+    if tweetData["translation"] is None and tlLanguage is not None and tlLanguage != tweetData["lang"]:
+        # translation probably failed on twitter's end
+        pass # TODO: implement DeepL api
+
+    if tweetData["translation"] is not None and tlLanguage is None:
+        tweetData["translation"] = None # didn't ask for TL
+
+    if include_txt == "false" and include_rtf == "false" and tlLanguage is None:
         addVnfToLinkCache(twitter_url,tweetData)
     return tweetData
 
@@ -307,6 +321,7 @@ def getUserData(twitter_url,includeFeed=False):
 
 @app.route('/<path:sub_path>') # Default endpoint used by everything
 def twitfix(sub_path):
+    splitPath=sub_path.split("/")
     global user_agent
     user_agent = request.headers.get('User-Agent', None)
     if user_agent is None:
@@ -355,24 +370,33 @@ def twitfix(sub_path):
     include_txt="false"
     include_rtf="false"
 
+    
+    translationIndex=indexOfAny(splitPath,translation.mergedLangs,caseInsensitive=True)
+    translationLang = None
+    if translationIndex != -1:
+        if splitPath[translationIndex].upper() in translation.languageAliases:
+            translationLang = translation.languageAliases[splitPath[translationIndex].upper()]
+        else:
+            translationLang = splitPath[translationIndex].lower()
+
     if isApiRequest:
         if "include_txt" in request.args:
             include_txt = request.args.get("include_txt")
         if "include_rtf" in request.args:
             include_rtf = request.args.get("include_rtf")
 
-    tweetData = getTweetData(twitter_url,include_txt,include_rtf)
+    tweetData = getTweetData(twitter_url,include_txt,include_rtf,tlLanguage=translationLang)
     if tweetData is None:
         log.error("Tweet Data Get failed for "+twitter_url)
         return message(msgs.failedToScan)
     qrt = None
     if 'qrtURL' in tweetData and tweetData['qrtURL'] is not None:
-        qrt = getTweetData(tweetData['qrtURL'])
+        qrt = getTweetData(tweetData['qrtURL'],tlLanguage=translationLang)
     tweetData['qrt'] = qrt
 
     retweet = None
     if 'retweetURL' in tweetData and tweetData['retweetURL'] is not None:
-        retweet = getTweetData(tweetData['retweetURL'])
+        retweet = getTweetData(tweetData['retweetURL'],tlLanguage=translationLang)
     tweetData['retweet'] = retweet
 
     tweetData = deepcopy(tweetData)
@@ -403,9 +427,10 @@ def twitfix(sub_path):
         return send_file(BytesIOWrapper(rtf), mimetype='application/rtf', as_attachment=True, download_name=f'{tweetData["user_screen_name"]}_{tweetData["tweetID"]}.rtf')
 
     embedIndex = -1
-    # if url ends with /1, /2, /3, or /4, we'll use that as the index
-    if sub_path[-2:] in ["/1","/2","/3","/4"]:
-        embedIndex = int(sub_path[-1])-1
+    # if url has /1, /2, /3, or /4, we'll use that as the index
+    numIdx=indexOfAny(splitPath,["1","2","3","4"]);
+    if numIdx != -1:
+        embedIndex = int(splitPath[numIdx])-1
         sub_path = sub_path[:-2]
         
     if isApiRequest: # Directly return the API response if the request is from the API
@@ -484,21 +509,29 @@ def rendercombined():
 
 @app.route("/api/v1/statuses/<string:tweet_id>")
 def api_v1_status(tweet_id):
-    embedIndex = int(tweet_id[0])-1
-    tweet_id = int(tweet_id[1:])
+    lang = None
+    if activityseparator not in tweet_id: #old embeds
+        embedIndex = int(tweet_id[0])-1
+        tweet_id = int(tweet_id[1:])
+    else:
+        args = tweet_id.split(activityseparator)
+        embedIndex = int(args[0])
+        tweet_id = int(args[1])
+        if len(args)>2:
+            lang=args[2]
     twitter_url=f"https://twitter.com/i/status/{tweet_id}"
-    tweetData = getTweetData(twitter_url)
+    tweetData = getTweetData(twitter_url,tlLanguage=lang)
     if tweetData is None:
         log.error("Tweet Data Get failed for "+twitter_url)
         return message(msgs.failedToScan)
     qrt = None
     if 'qrtURL' in tweetData and tweetData['qrtURL'] is not None:
-        qrt = getTweetData(tweetData['qrtURL'])
+        qrt = getTweetData(tweetData['qrtURL'],tlLanguage=lang)
     tweetData['qrt'] = qrt
 
     retweet = None
     if 'retweetURL' in tweetData and tweetData['retweetURL'] is not None:
-        retweet = getTweetData(tweetData['retweetURL'])
+        retweet = getTweetData(tweetData['retweetURL'],tlLanguage=lang)
     tweetData['retweet'] = retweet
 
     if tweetData is None:

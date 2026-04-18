@@ -17,8 +17,11 @@ def genLikesDisplay(vnf):
         return ("💖 " + numerize.numerize(vnf['likes']))
 
 def genQrtDisplay(qrt):
+    text = qrt['text']
+    if "translation" in qrt:
+        text = qrt["translation"]["text"]
     verifiedCheck = "☑️" if ('verified' in qrt and qrt['verified']) else ""
-    return ("\n\n【QRT of " + qrt['user_name'] + " (@" + qrt['user_screen_name'] + ")"+ verifiedCheck+":】\n\n'" + qrt['text'] + "'")
+    return ("\n\n【QRT of " + qrt['user_name'] + " (@" + qrt['user_screen_name'] + ")"+ verifiedCheck+":】\n\n'" + text + "'")
 
 def genPollDisplay(poll):
     pctSplit=10
@@ -26,6 +29,9 @@ def genPollDisplay(poll):
     for choice in poll["options"]:
         output+=choice["name"]+"\n"+("█"*int(choice["percent"]/pctSplit)) +" "+str(choice["percent"])+"%\n"
     return output
+
+def genTranslationDisplay(translation):
+    return f"【TL "+translation["source_language"]+"→"+translation["destination_language"]+"】\n\n"+translation["text"]
 
 # formats the top text of the embed
 def formatProvider(base,vnf):
@@ -38,12 +44,15 @@ def formatProvider(base,vnf):
         finalText = base
     return finalText
 
-def formatEmbedDesc(type,body,qrt,pollData):
+def formatEmbedDesc(type,body,qrt,pollData,translation):
     # Trim the embed description to 248 characters, prioritizing poll and likes
 
     qrtType=None
     if qrt!=None:
         qrtType="Text"
+
+    if translation is not None:
+        body = genTranslationDisplay(translation)
 
     limit = videoDescLimit if type=="Video" or (qrt!=None and (qrtType=="Video")) else tweetDescLimit
 
@@ -73,6 +82,6 @@ def formatEmbedDesc(type,body,qrt,pollData):
         diff = len(output)-limit
         # remove the characters from body, add ellipsis
         body = body[:-(diff+1)]+"…"
-        return formatEmbedDesc(type,body,qrt,pollData)
+        return formatEmbedDesc(type,body,qrt,pollData,None)
     else:
         return output
