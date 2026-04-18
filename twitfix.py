@@ -290,7 +290,7 @@ def getTweetData(twitter_url,include_txt="false",include_rtf="false",tlLanguage=
     
     if tweetData["translation"] is None and tlLanguage is not None and tlLanguage != tweetData["lang"]:
         # translation probably failed on twitter's end
-        pass # TODO: implement DeepL api
+        tweetData["translation"] = translation.getDeeplTranslation(tweetData["text"],tlLanguage)
 
     if tweetData["translation"] is not None and tlLanguage is None:
         tweetData["translation"] = None # didn't ask for TL

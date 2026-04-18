@@ -13,7 +13,8 @@ if ('RUNNING_SERVERLESS' in os.environ and os.environ['RUNNING_SERVERLESS'] == '
                 "url": os.getenv("VXTWITTER_URL","https://vxtwitter.com"),
                 "combination_method": os.getenv("VXTWITTER_COMBINATION_METHOD","local"), # can either be 'local' or a URL to a server handling requests in the same format
                 "gifConvertAPI":os.getenv("VXTWITTER_GIF_CONVERT_API",""),
-                "workaroundTokens":os.getenv("VXTWITTER_WORKAROUND_TOKENS",None)
+                "workaroundTokens":os.getenv("VXTWITTER_WORKAROUND_TOKENS",None),
+                "deeplKey":os.getenv("DEEPL_API_KEY",None),
             }
         }
 else:
@@ -31,7 +32,8 @@ else:
                     "url": "https://vxtwitter.com",
                     "combination_method": "local", # can either be 'local' or a URL to a server handling requests in the same format
                     "gifConvertAPI":"",
-                    "workaroundTokens":None
+                    "workaroundTokens":None,
+                    "deeplKey":None
                 }
             }
 

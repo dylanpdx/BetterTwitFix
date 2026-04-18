@@ -9,3 +9,4 @@ numerize==0.12
 oauthlib==3.2.2
 PyRTF3==0.47.5
 XClientTransaction==1.0.2
+deepl==1.3.0

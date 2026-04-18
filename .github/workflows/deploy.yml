@@ -71,3 +71,4 @@ jobs:
           VXTWITTER_WORKAROUND_TOKENS: ${{ secrets.VXTWITTER_WORKAROUND_TOKENS }}
           VXTWITTER_PROXIES: ${{ secrets.VXTWITTER_PROXIES }}
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
