@@ -57,7 +57,7 @@ RUN PKG_CONFIG_PATH="/ffmpeg_build/lib/pkgconfig" ./configure --prefix="/ffmpeg_
     --pkg-config-flags="--static" --extra-ldexeflags="-static" --extra-libs="-lpthread -lm" --bindir="/bin" --disable-shared --enable-static --enable-gpl --enable-pthreads \
     --enable-libx264 --enable-libsvtav1 --disable-ffplay
 
-RUN make -j
+RUN make -j 8
 
 FROM public.ecr.aws/lambda/python:3.12
 

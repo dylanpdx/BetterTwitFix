@@ -127,6 +127,7 @@ def lambda_handler(event, context):
                     "headers": 
                     {
                         "Content-Type": "image/avif",
+                        "Cache-Control": "public, max-age=604800, immutable"
                     },
                     'body': encoded_string,
                     'isBase64Encoded': True

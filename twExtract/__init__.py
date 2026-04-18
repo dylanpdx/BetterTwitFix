@@ -514,7 +514,7 @@ def fixTweetData(tweet):
 
 def extractStatus(url,workaroundTokens=None):
     # TODO: commented out methods are too slow/unreliable at the moment
-    methods=[extractStatusV2Rest_Anon,extractStatusV2,extractStatusV2TweetDetail,extractStatusV2Android]#,extractStatusV2Rest]
+    methods=[extractStatusV2Rest_Anon,extractStatusV2,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2TweetDetail]
     for method in methods:
         try:
             result = method(url,workaroundTokens)
