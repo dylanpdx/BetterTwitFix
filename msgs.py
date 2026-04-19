@@ -18,7 +18,7 @@ def genLikesDisplay(vnf):
 
 def genQrtDisplay(qrt):
     text = qrt['text']
-    if "translation" in qrt:
+    if "translation" in qrt and qrt["translation"] is not None:
         text = qrt["translation"]["text"]
     verifiedCheck = "☑️" if ('verified' in qrt and qrt['verified']) else ""
     return ("\n\n【QRT of " + qrt['user_name'] + " (@" + qrt['user_screen_name'] + ")"+ verifiedCheck+":】\n\n'" + text + "'")
