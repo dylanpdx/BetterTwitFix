@@ -515,7 +515,7 @@ def api_v1_status(tweet_id):
         tweet_id = int(tweet_id[1:])
     else:
         args = tweet_id.split(activityseparator)
-        embedIndex = int(args[0])
+        embedIndex = int(args[0])-1
         tweet_id = int(args[1])
         if len(args)>2:
             lang=args[2]
