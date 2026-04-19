@@ -205,3 +205,19 @@ def test_embed_action():
     assert resp.status_code==200
     assert "application/activity+json" in str(resp.data)
     assert "%F0%9F%92%96" not in str(resp.data) # 💖
+
+def test_embed_translated():
+    resp = client.get(testTextTweet.replace("https://twitter.com","")+"/jp",headers={"User-Agent":"test"})
+    assert resp.status_code==200
+    assert "→" in resp.text
+    resp = client.get(testTextTweet.replace("https://twitter.com","")+"/ja",headers={"User-Agent":"test"})
+    assert resp.status_code==200
+    assert "→" in resp.text
+
+def test_embed_translated_subdomain():
+    resp = client.get(testTextTweet.replace("https://twitter.com","https://jp.vxtwitter.com"),headers={"User-Agent":"test"})
+    assert resp.status_code==200
+    assert "→" in resp.text
+    resp = client.get(testTextTweet.replace("https://twitter.com","https://ja.vxtwitter.com"),headers={"User-Agent":"test"})
+    assert resp.status_code==200
+    assert "→" in resp.text

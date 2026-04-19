@@ -322,13 +322,18 @@ def getUserData(twitter_url,includeFeed=False):
 @app.route('/<path:sub_path>') # Default endpoint used by everything
 def twitfix(sub_path):
     splitPath=sub_path.split("/")
+    if "|" in splitPath[-1]: # discord doesn't strip this when a link is spoilered
+        splitPath[-1] = splitPath[-1].replace("|","")
+
+    subdomain = request.host.rsplit(".",2)[0]
+
     global user_agent
     user_agent = request.headers.get('User-Agent', None)
     if user_agent is None:
         user_agent = "unknown"
 
-    isApiRequest=request.url.startswith("https://api.vx") or request.url.startswith("http://api.vx")
-    if not isApiRequest and (request.url.startswith("https://l.vx") or request.url.startswith("https://old.vx")) and "Discord" in user_agent:
+    isApiRequest=subdomain=="api"
+    if not isApiRequest and (subdomain=="l" or subdomain=="old") and "Discord" in user_agent:
         user_agent = user_agent.replace("Discord","LegacyEmbed") # TODO: Clean up; This is a hacky fix to make the new activity embed not trigger
     if sub_path in staticFiles:
         if 'path' not in staticFiles[sub_path] or staticFiles[sub_path]["path"] == None:
@@ -378,6 +383,11 @@ def twitfix(sub_path):
             translationLang = translation.languageAliases[splitPath[translationIndex].upper()]
         else:
             translationLang = splitPath[translationIndex].lower()
+    elif subdomain.upper() in translation.mergedLangs:
+        if subdomain.upper() in translation.languageAliases:
+            translationLang = translation.languageAliases[subdomain.upper()]
+        else:
+            translationLang = subdomain.lower()
 
     if isApiRequest:
         if "include_txt" in request.args:
@@ -407,7 +417,7 @@ def twitfix(sub_path):
         requestUrlWithoutQuery = request.url
 
     directEmbed=False
-    if requestUrlWithoutQuery.startswith("https://d.vx") or requestUrlWithoutQuery.endswith(".mp4") or requestUrlWithoutQuery.endswith(".png"):
+    if subdomain=="d" or requestUrlWithoutQuery.endswith(".mp4") or requestUrlWithoutQuery.endswith(".png"):
         directEmbed = True
         # remove the .mp4 from the end of the URL
         if requestUrlWithoutQuery.endswith(".mp4") or requestUrlWithoutQuery.endswith(".png"):
