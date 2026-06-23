@@ -14,7 +14,7 @@ bearer="Bearer AAAAAAAAAAAAAAAAAAAAAPYXBAAAAAAACLXUNDekMxqa8h%2F40K4moUkGsoc%3DT
 v2bearer="Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 androidBearer="Bearer AAAAAAAAAAAAAAAAAAAAAFXzAwAAAAAAMHCxpeSDG1gLNLghVe8d74hl6k4%3DRUMF4xAQLsbeBhTSRrCiQpJtxoGWeyHrDb5te2jpGskWDFW82F"
 
-requestUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0"
+requestUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"
 
 bearerTokens=[bearer,v2bearer,androidBearer]
 
@@ -161,10 +161,10 @@ def getGuestToken():
     global guestToken
     global guestTokenUses
     if guestToken is None:
-        r = requests.get(f"https://{twitterUrl}",headers={"User-Agent":requestUserAgent,"Cookie":"night_mode=2"},allow_redirects=False)
+        r = requests.get(f"https://{twitterUrl}",headers={"User-Agent":requestUserAgent},allow_redirects=False)
         m = re.search(gt_pattern, r.text)
         if m is None:
-            r = requests.post(f"https://api.{twitterUrl}/1.1/guest/activate.json", headers={"Authorization":bearer})
+            r = requests.post(f"https://api.{twitterUrl}/1.1/guest/activate.json", headers={"Authorization":v2bearer})
             guestToken = json.loads(r.text)["guest_token"]
         else:
             guestToken = m.group(1)
@@ -219,7 +219,7 @@ def extractStatus_guestToken(url):
         raise TwExtractError(error["code"], error["message"])
     return output
 
-def extractStatus_syndication(url,workaroundTokens=None):
+def extractStatus_syndication(url,workaroundTokens=None,tlLanguage=None):
     # https://github.com/mikf/gallery-dl/blob/46cae04aa3a113c7b6bbee1bb468669564b14ae8/gallery_dl/extractor/twitter.py#L1784
     m = re.search(pathregex, url)
     if m is None:
@@ -516,7 +516,7 @@ def fixTweetData(tweet):
     return tweet
 
 def extractStatus(url,workaroundTokens=None,tlLanguage=None):
-    methods=[extractStatusV2Rest_Anon,extractStatusV2,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2TweetDetail]
+    methods=[extractStatus_syndication,extractStatusV2,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2TweetDetail]
     if tlLanguage is not None: # prioritize endpoints that return translations
         methods = [extractStatusV2Rest,extractStatusV2TweetDetail,extractStatusV2Android,extractStatusV2,extractStatusV2Rest_Anon]
     for method in methods:
