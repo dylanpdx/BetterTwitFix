@@ -161,13 +161,8 @@ def getGuestToken():
     global guestToken
     global guestTokenUses
     if guestToken is None:
-        r = requests.get(f"https://{twitterUrl}",headers={"User-Agent":requestUserAgent},allow_redirects=False)
-        m = re.search(gt_pattern, r.text)
-        if m is None:
-            r = requests.post(f"https://api.{twitterUrl}/1.1/guest/activate.json", headers={"Authorization":v2bearer})
-            guestToken = json.loads(r.text)["guest_token"]
-        else:
-            guestToken = m.group(1)
+        r = requests.post(f"https://api.{twitterUrl}/1.1/guest/activate.json", headers={"Authorization":v2bearer,"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0"})
+        guestToken = json.loads(r.text)["guest_token"]
         guestTokenUses = 0
     else:
         guestTokenUses+=1
@@ -516,7 +511,7 @@ def fixTweetData(tweet):
     return tweet
 
 def extractStatus(url,workaroundTokens=None,tlLanguage=None):
-    methods=[extractStatus_syndication,extractStatusV2,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2TweetDetail]
+    methods=[extractStatusV2Rest_Anon,extractStatusV2,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2TweetDetail]
     if tlLanguage is not None: # prioritize endpoints that return translations
         methods = [extractStatusV2Rest,extractStatusV2TweetDetail,extractStatusV2Android,extractStatusV2,extractStatusV2Rest_Anon]
     for method in methods:
