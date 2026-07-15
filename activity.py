@@ -2,6 +2,7 @@ import datetime
 import msgs
 from utils import determineEmbedTweet, determineMediaToEmbed
 from copy import deepcopy
+import html
 
 def tweetDataToActivity(tweetData,embedIndex = -1):
     content=""
@@ -9,10 +10,10 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
     if tweetData['replyingTo'] is not None:
         content += f"<blockquote>↪️ <i>Replying to @{tweetData['replyingTo']}</i></blockquote>"
 
-    mainText = tweetData['text']
+    mainText = html.escape(tweetData['text'])
     if tweetData["translation"] is not None:
         content += f"<blockquote>🌐 <i>{tweetData['translation']['source_language'].upper()}→{tweetData['translation']['destination_language'].upper()}</i></blockquote>"
-        mainText=tweetData['translation']["text"]
+        mainText=html.escape(tweetData['translation']["text"])
         
     content+=f"<p>{mainText}</p>"
 
