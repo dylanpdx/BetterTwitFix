@@ -67,6 +67,12 @@ def test_embed_Suggestive():
     assert "so i had a bot generate it for me" in str(resp.data)
     assert "FfF_gKwXgAIpnpD" in str(resp.data)
 
+def test_embed_Gif():
+    resp = client.get(testGifTweet.replace("https://twitter.com",""),headers={"User-Agent":"Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)"})
+    assert resp.status_code==200
+    assert "convert.avif" in str(resp.data)
+    assert "og:video" not in str(resp.data)
+
 def test_embed_video_direct():
     resp = client.get(testVideoTweet.replace("https://twitter.com","")+".mp4",headers={"User-Agent":"test"})
     assert resp.status_code==200
@@ -143,9 +149,11 @@ def test_embed_multimedia_single():
     resp = client.get(testMultiMediaTweet.replace("https://twitter.com","")+"/1",headers={"User-Agent":"test"})
     assert resp.status_code==200
     assert img1 in str(resp.data) and img2 not in str(resp.data)
+    assert "Media 1/3" in str(resp.data)
     resp = client.get(testMultiMediaTweet.replace("https://twitter.com","")+"/2",headers={"User-Agent":"test"})
     assert resp.status_code==200
     assert img1 not in str(resp.data) and img2 in str(resp.data)
+    assert "Media 2/3" in str(resp.data)
 
 def test_embed_mixedMedia():
     twt = videoRedirect(twitfix.getTweetData(testMixedMediaTweet))
@@ -156,14 +164,16 @@ def test_embed_mixedMedia():
     # Check for default behavior with no index
     assert resp.status_code==200
     assert img1 in str(resp.data) and img2 not in str(resp.data)
-    assert "Media 1/2" in str(resp.data) # make sure user knows there are multiple media
+    assert "additional media" in str(resp.data) # make sure user knows there are multiple media
 
     resp = client.get(testMixedMediaTweet.replace("https://twitter.com","")+"/1",headers={"User-Agent":"test"})
     assert resp.status_code==200
     assert img1 in str(resp.data) and img2 not in str(resp.data)
+    assert "Media 1/2" in str(resp.data)
     resp = client.get(testMixedMediaTweet.replace("https://twitter.com","")+"/2",headers={"User-Agent":"test"})
     assert resp.status_code==200
     assert img1 not in str(resp.data) and img2 in str(resp.data)
+    assert "Media 2/2" in str(resp.data)
 
 def test_embed_vine_player():
     resp = client.get(testVinePlayerTweet.replace("https://twitter.com",""),headers={"User-Agent":"test"})
@@ -199,7 +209,7 @@ def test_embed_action():
     cache.clearCache()
     resp = client.get(testTextTweet.replace("https://twitter.com",""),headers={"User-Agent":"test"})
     assert resp.status_code==200
-    assert "application/activity+json" in str(resp.data)
+    assert "application/activity+json" not in str(resp.data)
     assert "%F0%9F%92%96" in str(resp.data) # 💖
     resp = client.get(testTextTweet.replace("https://twitter.com",""),headers={"User-Agent":"Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)"})
     assert resp.status_code==200

@@ -80,7 +80,7 @@ def message(text):
 
 def generateActivityLink(tweetData,media=None,mediatype=None,embedIndex=-1):
     global user_agent
-    if 'LegacyEmbed' in user_agent: # TODO: Clean up; This is a hacky fix to make the new activity embed not trigger
+    if 'LegacyEmbed' in user_agent or "Discord" not in user_agent: # TODO: Clean up; This is a hacky fix to make the new activity embed not trigger
         return None
     try:
         embedIndex = embedIndex+1
@@ -99,16 +99,30 @@ def getAppName(tweetData,appnameSuffix=""):
         appName = msgs.formatProvider(config['config']['appname']+appnameSuffix,tweetData)
     return appName
 
-def renderImageTweetEmbed(tweetData,image,appnameSuffix="",embedIndex=-1):
+def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",embedIndex=-1):
     qrt = tweetData['qrt']
     embedDesc = msgs.formatEmbedDesc("Image",tweetData['text'],qrt,tweetData['pollData'],tweetData["translation"])
 
-    if image.startswith("https://pbs.twimg.com") and "?" not in image:
-        image = f"{image}?name=orig"
+    images = []
+    if embedIndex != -1:
+        images = [imagesExtended[embedIndex]["url"]]
+    else:
+        for extended in imagesExtended:
+            if extended["type"] == "image":
+                images.append(extended["url"])
+
+    if singleImage.startswith("https://pbs.twimg.com") and "?" not in singleImage:
+        singleImage = f"{singleImage}?name=orig"
+    galleryImages = []
+    for image in images:
+        if image.startswith("https://pbs.twimg.com") and "?" not in image:
+            image = f"{image}?name=orig"
+        galleryImages.append(image)
     
     return render_template("image.html",
                     tweet=tweetData,
-                    pic=[image],
+                    pic=galleryImages,
+                    combined_img=singleImage,
                     host=config['config']['url'],
                     desc=embedDesc,
                     urlEncodedDesc=urllib.parse.quote(embedDesc),
@@ -116,7 +130,7 @@ def renderImageTweetEmbed(tweetData,image,appnameSuffix="",embedIndex=-1):
                     appname=getAppName(tweetData,appnameSuffix),
                     color=config['config']['color'],
                     sicon="image",
-                    activityLink=generateActivityLink(tweetData,image,"image/png",embedIndex)
+                    activityLink=generateActivityLink(tweetData,singleImage,"image/png",embedIndex)
                     )
 
 def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1):
@@ -469,17 +483,22 @@ def twitfix(sub_path):
             return Response(renderTextTweetEmbed(tweetData),headers={"Cache-Tag": "embed"})
         else:
             tryGifConversion = "Discord" in user_agent
-            media = determineMediaToEmbed(embedTweetData,embedIndex,convertGif=tryGifConversion)
+            media = determineMediaToEmbed(embedTweetData,embedIndex,convertGif=tryGifConversion,isGeneratingActivity=generateActivityLink(tweetData) != None)
             suffix=""
             if "suffix" in media:
                 suffix = media["suffix"]
             if media['type'] == "image":
-                return Response(renderImageTweetEmbed(tweetData,media['url'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+                singleImg = embedTweetData["combinedMediaUrl"]
+                if embedIndex != -1:
+                    singleImg=embedTweetData["media_extended"][embedIndex]["url"]
+                if singleImg==None:
+                    singleImg=media['url']
+                return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],singleImg, appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
             elif media['type'] == "video":
                 return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
             elif media['type'] == "gif":
                 if "originalUrl" in media and media["url"] != media["originalUrl"] and tryGifConversion:
-                    return Response(renderImageTweetEmbed(tweetData,media['url'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+                    return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],media['url'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
                 else:
                     return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
 

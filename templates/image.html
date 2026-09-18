@@ -5,19 +5,15 @@
 
 {% include 'tweetCommon.html' %}
 
+{% if combined_img %}
+<meta name="twitter:image" content="{{ combined_img }}" />
+{% else %}
 <meta name="twitter:image" content="{{ pic[0] }}" />
-
-{% if pic[1] %}
-<meta name="twitter:image" content="{{ pic[1] }}" />
 {% endif %}
 
-{% if pic[2] %}
-<meta name="twitter:image" content="{{ pic[2] }}" />
-{% endif %}
-
-{% if pic[3] %}
-<meta name="twitter:image" content="{{ pic[3] }}" />
-{% endif %}
+{% for img in pic %}
+<meta property="og:image" content="{{ img }}" />
+{% endfor %}
 
 <meta name="twitter:creator" content="@{{ tweet['user_name'] }}" />
 

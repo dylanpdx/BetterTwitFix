@@ -236,10 +236,11 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
         sameMedia = True
 
     combinedMediaUrl = None
-    if len(media_extended) > 0 and sameMedia and media_extended[0]["type"] == "image" and len(media) > 1:
+    onlyImgs = [i["url"] for i in media_extended if i["type"]=="image"]
+    if len(onlyImgs) > 1:
         host=config['config']['url']
         combinedMediaUrl = f'{host}/rendercombined.jpg?imgs='
-        for i in media:
+        for i in onlyImgs:
             combinedMediaUrl += i + ","
         combinedMediaUrl = combinedMediaUrl[:-1]
 

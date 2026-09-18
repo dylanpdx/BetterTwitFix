@@ -1,6 +1,6 @@
 import datetime
 import msgs
-from utils import determineEmbedTweet, determineMediaToEmbed
+from utils import determineEmbedTweet, determineMediaToEmbed, mediaToGifConvert
 from copy import deepcopy
 import html
 
@@ -38,27 +38,32 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
 
     embedTweetData = determineEmbedTweet(tweetData)
     embeddingMedia = embedTweetData['hasMedia']
-    media = None
-    if embeddingMedia:
-        media = determineMediaToEmbed(embedTweetData,embedIndex)
+    allMedia = embedTweetData["media_extended"]
+    #if embeddingMedia:
+    #    media = determineMediaToEmbed(embedTweetData,embedIndex)
+    if embedIndex >= 0:
+        allMedia = [determineMediaToEmbed(embedTweetData,embedIndex)]
 
-    if media is not None:
-        media = deepcopy(media)
-        if media['type'] == "gif":
-            if "/convert.avif" in media['url']:
-                media['type'] = "image"
-            else:
-                media['type'] = "gifv"
-        if 'thumbnail_url' not in media:
-            media['thumbnail_url'] = media['url']
-        if media['type'] == "image" and "?" not in media['url']:
-            media['url'] += "?name=orig"
-        attachments.append({
-            "id": "114163769487684704",
-            "type": media['type'],
-            "url": media['url'],
-            "preview_url": media['thumbnail_url'],
-        })
+    for media in allMedia:
+        if media is not None:
+            media = deepcopy(media)
+            if media['type'] == "gif":
+                if  media['type'] == "gif":
+                    media = mediaToGifConvert(media)
+                if "/convert.avif" in media['url']:
+                    media['type'] = "image"
+                else:
+                    media['type'] = "gifv"
+            if 'thumbnail_url' not in media:
+                media['thumbnail_url'] = media['url']
+            if media['type'] == "image" and "?" not in media['url']:
+                media['url'] += "?name=orig"
+            attachments.append({
+                "id": "100000000000000000",
+                "type": media['type'],
+                "url": media['url'],
+                "preview_url": media['thumbnail_url'],
+            })
 
     # https://docs.joinmastodon.org/methods/statuses/
     return {
