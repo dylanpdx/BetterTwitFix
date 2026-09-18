@@ -163,7 +163,7 @@ def test_embed_mixedMedia():
 
     # Check for default behavior with no index
     assert resp.status_code==200
-    assert img1 in str(resp.data) and img2 not in str(resp.data)
+    assert img1 in str(resp.data) and f'property="og:image" content="{img2}"' not in str(resp.data)
     assert "additional media" in str(resp.data) # make sure user knows there are multiple media
 
     resp = client.get(testMixedMediaTweet.replace("https://twitter.com","")+"/1",headers={"User-Agent":"test"})

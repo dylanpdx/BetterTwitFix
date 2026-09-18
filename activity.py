@@ -43,13 +43,18 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
     #    media = determineMediaToEmbed(embedTweetData,embedIndex)
     if embedIndex >= 0:
         allMedia = [determineMediaToEmbed(embedTweetData,embedIndex)]
+    else:
+        allMedia = [media for media in allMedia if media["type"] in ["image", "gif"]] # gifs are "images" since they have been converted to avif
 
     for media in allMedia:
         if media is not None:
             media = deepcopy(media)
             if media['type'] == "gif":
+                original_url = media['url']
                 if  media['type'] == "gif":
                     media = mediaToGifConvert(media)
+                if media['url'] == original_url and "/convert.avif?url=" not in media['url']:
+                    continue
                 if "/convert.avif" in media['url']:
                     media['type'] = "image"
                 else:

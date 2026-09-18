@@ -14,7 +14,7 @@ import msgs
 import twExtract as twExtract
 from cache import addVnfToLinkCache,getVnfFromLinkCache
 import vxlogging as log
-from utils import getTweetIdFromUrl, pathregex, determineMediaToEmbed, determineEmbedTweet, BytesIOWrapper, fixMedia, indexOfAny
+from utils import getTweetIdFromUrl, pathregex, determineMediaToEmbed, determineEmbedTweet, BytesIOWrapper, fixMedia, indexOfAny, mediaToGifConvert
 from vxApi import getApiResponse, getApiUserResponse
 from urllib.parse import urlparse 
 from PyRTF.Elements import Document
@@ -105,11 +105,18 @@ def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",
 
     images = []
     if embedIndex != -1:
-        images = [imagesExtended[embedIndex]["url"]]
+        selected = deepcopy(imagesExtended[embedIndex])
+        if selected["type"] == "gif":
+            selected = mediaToGifConvert(selected)
+        images = [selected["url"]]
     else:
         for extended in imagesExtended:
             if extended["type"] == "image":
                 images.append(extended["url"])
+            elif extended["type"] == "gif":
+                converted = mediaToGifConvert(deepcopy(extended))
+                if converted["url"] != extended["url"]:
+                    images.append(converted["url"])
 
     if singleImage.startswith("https://pbs.twimg.com") and "?" not in singleImage:
         singleImage = f"{singleImage}?name=orig"
