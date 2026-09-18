@@ -67,6 +67,8 @@ def determineEmbedTweet(tweetData):
 def mediaToGifConvert(media):
     if media['type'] != "gif":
         raise Exception("non gif passed to mediaToGifConvert")
+    if "/convert.avif?url=" in media['url']:
+        return media
     if config['config']['gifConvertAPI'] != "" and config['config']['gifConvertAPI'] != "none" and config['config']['gifConvertAPI'] != "local":
         gcApi = config['config']['gifConvertAPI']
         #if gcApi == "local": # TODO
