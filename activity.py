@@ -41,10 +41,23 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
     allMedia = embedTweetData["media_extended"]
     #if embeddingMedia:
     #    media = determineMediaToEmbed(embedTweetData,embedIndex)
+    gallery_mode = False
     if embedIndex >= 0:
         allMedia = [determineMediaToEmbed(embedTweetData,embedIndex)]
     else:
-        allMedia = [media for media in allMedia if media["type"] in ["image", "gif"]] # gifs are "images" since they have been converted to avif
+        galleryMedia = []
+        for media in allMedia:
+            if media["type"] == "image":
+                galleryMedia.append(media)
+            elif media["type"] == "gif":
+                converted = mediaToGifConvert(deepcopy(media))
+                if converted["url"] != media["url"] or "/convert.avif?url=" in media["url"]:
+                    galleryMedia.append(media)
+        if len(galleryMedia) > 0:
+            allMedia = galleryMedia
+            gallery_mode = True
+        else:
+            allMedia = [determineMediaToEmbed(embedTweetData)]
 
     for media in allMedia:
         if media is not None:
@@ -54,10 +67,12 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
                 if  media['type'] == "gif":
                     media = mediaToGifConvert(media)
                 if media['url'] == original_url and "/convert.avif?url=" not in media['url']:
-                    continue
+                    if gallery_mode:
+                        continue
+                    media['type'] = "gifv"
                 if "/convert.avif" in media['url']:
                     media['type'] = "image"
-                else:
+                elif media['type'] == "gif":
                     media['type'] = "gifv"
             if 'thumbnail_url' not in media:
                 media['thumbnail_url'] = media['url']
