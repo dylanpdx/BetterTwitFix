@@ -63,6 +63,7 @@ def addVnfToTweetIdCache(tweet_id, vnf):
         elif link_cache_system == "ram": # FOR TESTS ONLY
             link_cache[tweet_id] = vnf
             log.debug("Link added to RAM cache ")
+            return True
         elif link_cache_system == "dynamodb": # pragma: no cover
             vnf["ttl"] = int(vnf["ttl"].strftime('%s'))
             table = client.Table(DYNAMO_CACHE_TBL)
