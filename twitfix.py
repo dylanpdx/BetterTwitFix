@@ -546,20 +546,23 @@ def rendercombined():
 @app.route("/api/v1/statuses/<string:tweet_id>")
 def api_v1_status(tweet_id):
     lang = None
-    if activityseparator not in tweet_id: #old embeds
-        embedIndex = int(tweet_id[0])-1
-        tweet_id = int(tweet_id[1:])
-    else:
-        args = tweet_id.split(activityseparator)
-        embedIndex = int(args[0])-1
-        tweet_id = int(args[1])
-        if len(args)>2:
-            lang=args[2]
+    try:
+        if activityseparator not in tweet_id: #old embeds
+            embedIndex = int(tweet_id[0])-1
+            tweet_id = int(tweet_id[1:])
+        else:
+            args = tweet_id.split(activityseparator)
+            embedIndex = int(args[0])-1
+            tweet_id = int(args[1])
+            if len(args)>2:
+                lang=args[2]
+    except (ValueError, IndexError):
+        abort(400)
     twitter_url=f"https://twitter.com/i/status/{tweet_id}"
     tweetData = getTweetData(twitter_url,tlLanguage=lang)
     if tweetData is None:
         log.error("Tweet Data Get failed for "+twitter_url)
-        return message(msgs.failedToScan)
+        abort(500) # this should cause Discord to fall back to the default embed
     qrt = None
     if 'qrtURL' in tweetData and tweetData['qrtURL'] is not None:
         qrt = getTweetData(tweetData['qrtURL'],tlLanguage=lang)
@@ -570,8 +573,6 @@ def api_v1_status(tweet_id):
         retweet = getTweetData(tweetData['retweetURL'],tlLanguage=lang)
     tweetData['retweet'] = retweet
 
-    if tweetData is None:
-        abort(500) # this should cause Discord to fall back to the default embed
     return activitymg.tweetDataToActivity(tweetData,embedIndex)
 
 def oEmbedGen(description, user, video_link, ttype,providerName=None):

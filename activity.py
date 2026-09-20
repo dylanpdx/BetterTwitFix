@@ -19,9 +19,9 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
 
     attachments=[]
     if tweetData['qrt'] is not None:
-        qrtText = tweetData['qrt']['text']
+        qrtText = html.escape(tweetData['qrt']['text'])
         if "translation" in tweetData['qrt'] and tweetData['qrt']["translation"] is not None:
-            qrtText = tweetData['qrt']["translation"]["text"]
+            qrtText = html.escape(tweetData['qrt']["translation"]["text"])
         content += f"<blockquote><b>QRT: <a href=\"{tweetData['qrtURL']}\">{tweetData['qrt']['user_screen_name']}</a></b><br>{qrtText}</blockquote>"
     if tweetData['pollData'] is not None:
         content += f"<p>{msgs.genPollDisplay(tweetData['pollData'])}</p>"
@@ -44,6 +44,8 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
     gallery_mode = False
     if embedIndex >= 0:
         allMedia = [determineMediaToEmbed(embedTweetData,embedIndex)]
+    elif len(allMedia) > 0 and allMedia[0]["type"] == "video":
+        allMedia = [allMedia[0]]
     else:
         galleryMedia = []
         for media in allMedia:
@@ -56,7 +58,7 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
         if len(galleryMedia) > 0:
             allMedia = galleryMedia
             gallery_mode = True
-        else:
+        elif len(allMedia) > 0:
             allMedia = [determineMediaToEmbed(embedTweetData)]
 
     for media in allMedia:
@@ -94,7 +96,7 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
 	"edited_at": None,
 	"reblog": None,
 	"in_reply_to_account_id": None,
-	"language": "en",
+    "language": tweetData.get("lang", "en"),
 	"content": content,
 	"spoiler_text": "",
 	"visibility": "public",
