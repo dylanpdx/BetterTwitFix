@@ -101,11 +101,7 @@ def get500ImgBase64():
 # combine up to four images into a single image
 def genImage(imageArray):
     totalSize=getTotalImgSize(imageArray)
-    combined = combineImages(imageArray, *totalSize)
-    combinedBG = combineImages(imageArray, *totalSize,False)
-    combinedBG = blurImage(combinedBG,50)
-    finalImg = Image.alpha_composite(combinedBG,combined)
-    #finalImg = ImageOps.pad(finalImg, findImageWithMostPixels(imageArray).size,color=(0, 0, 0, 0))
+    finalImg = combineImages(imageArray, *totalSize)
     finalImg = finalImg.convert('RGB')
     return finalImg
 

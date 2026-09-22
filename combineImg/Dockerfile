@@ -1,7 +1,7 @@
-FROM public.ecr.aws/lambda/python:3.8
-RUN yum -y update
-RUN yum -y install git && yum clean all
-RUN yum -y install tar gzip zlib freetype-devel \
+FROM public.ecr.aws/lambda/python:3.14
+RUN dnf -y update
+RUN dnf -y install git && dnf clean all
+RUN dnf -y install tar gzip zlib freetype-devel \
     gcc \
     ghostscript \
     lcms2-devel \
@@ -13,16 +13,13 @@ RUN yum -y install tar gzip zlib freetype-devel \
     libwebp-devel \
     make \
     openjpeg2-devel \
-    rh-python36 \
-    rh-python36-python-virtualenv \
     sudo \
     tcl-devel \
     tk-devel \
-    tkinter \
     which \
     xorg-x11-server-Xvfb \
     zlib-devel \
-    && yum clean all
+    && dnf clean all
 RUN pip install -U --force-reinstall pillow-simd
 RUN pip install requests
 

@@ -125,6 +125,9 @@ def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",
         if image.startswith("https://pbs.twimg.com") and "?" not in image:
             image = f"{image}?name=orig"
         galleryImages.append(image)
+
+    if "DiscordBot" in user_agent:
+        singleImage = None
     
     return render_template("image.html",
                     tweet=tweetData,
