@@ -43,7 +43,7 @@ staticFiles = { # TODO: Use flask static files instead of this
     "text.png": {"mime": "image/png","path": "richEmbed/text.png"},
 }
 
-generate_embed_user_agents = [
+generate_embed_user_agents = [  # TODO: use crawler-user-agents package
     "facebookexternalhit/1.1",
     "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36",
     "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US; Valve Steam Client/default/1596241936; ) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
@@ -58,6 +58,8 @@ generate_embed_user_agents = [
     "Mozilla/5.0 (compatible; January/1.0; +https://gitlab.insrt.uk/revolt/january)", 
     "Synapse (bot; +https://github.com/matrix-org/synapse)",
     "Iframely/1.3.1 (+https://iframely.com/docs/about)",
+    "WhatsApp/2", # this is used by signal too
+    "Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)",
     "test"]
 
 def isValidUserAgent(user_agent):
@@ -125,6 +127,9 @@ def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",
         if image.startswith("https://pbs.twimg.com") and "?" not in image:
             image = f"{image}?name=orig"
         galleryImages.append(image)
+
+    if "DiscordBot" in user_agent:
+        singleImage = None
     
     return render_template("image.html",
                     tweet=tweetData,
