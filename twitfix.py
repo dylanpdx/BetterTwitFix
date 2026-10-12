@@ -59,6 +59,7 @@ generate_embed_user_agents = [  # TODO: use crawler-user-agents package
     "Synapse (bot; +https://github.com/matrix-org/synapse)",
     "Iframely/1.3.1 (+https://iframely.com/docs/about)",
     "WhatsApp/2", # this is used by signal too
+    "Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)",
     "test"]
 
 def isValidUserAgent(user_agent):
