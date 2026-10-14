@@ -1,0 +1,83 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "vxtwitter",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-10-08",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"observability": {
+		"enabled": true
+	},
+	"containers": [
+		{
+			"class_name": "vxTwitterMain",
+			"scheduling_policy": "durable_object",
+			"images": {
+				"base": {
+					"dockerfile": "./Dockerfile"
+				}
+			}
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"class_name": "vxTwitterMain",
+				"name": "VXTWITTER_MAIN"
+			}
+		]
+	},
+	"upload_source_maps": true,
+	"exports": {
+		"vxTwitterMain": {
+			"type": "durable-object",
+			"storage": "sqlite"
+		}
+	},
+	"vars":{
+		"VXTWITTER_APP_NAME": "vxTwitter / fixvx",
+		"VXTWITTER_CACHE_TABLE":"tweets-table-dev",
+		"VXTWITTER_COLOR":"#1DA1F2",
+		"VXTWITTER_DATABASE":"none",
+		"VXTWITTER_LINK_CACHE":"none",
+		"VXTWITTER_METHOD":"hybrid",
+		"VXTWITTER_REPO":"https://github.com/dylanpdx/BetterTwitFix",
+		"VXTWITTER_URL":"https://vxtwitter.com"
+	},
+	"placement":{
+		"region":"gcp:us-east1"
+	}
+	/**
+	 * Smart Placement
+	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+	 */
+	// "placement": {  "mode": "smart" }
+	/**
+	 * Bindings
+	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+	 * databases, object storage, AI inference, real-time communication and more.
+	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+	 */
+	/**
+	 * Environment Variables
+	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+	 * Note: Use secrets to store sensitive data.
+	 * https://developers.cloudflare.com/workers/configuration/secrets/
+	 */
+	// "vars": {  "MY_VARIABLE": "production_value" }
+	/**
+	 * Static Assets
+	 * https://developers.cloudflare.com/workers/static-assets/binding/
+	 */
+	// "assets": {  "directory": "./public/",  "binding": "ASSETS" }
+	/**
+	 * Service Bindings (communicate between multiple Workers)
+	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+	 */
+	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+}

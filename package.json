@@ -1,29 +1,27 @@
 {
-  "name": "bettertwitfix",
-  "version": "1.0.0",
-  "description": "(A fork of TwitFix)\r Basic flask server that serves fixed twitter video embeds to desktop discord by using either the Twitter API or Youtube-DL to grab tweet video information. This also automatically embeds the first link in the text of non video tweets (API Only)",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dylanpdx/BetterTwitFix.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/dylanpdx/BetterTwitFix/issues"
-  },
-  "homepage": "https://github.com/dylanpdx/BetterTwitFix#readme",
+  "name": "vxtwitter",
+  "description": "Fix Twitter video embeds in Discord (and Telegram!)",
   "dependencies": {
-    "serverless": "^4.4.7"
+    "hono": "4.11.1"
   },
   "devDependencies": {
-    "serverless-plugin-common-excludes": "^4.0.0",
-    "serverless-plugin-include-dependencies": "^6.1.1",
-    "serverless-python-requirements": "^6.1.1",
-    "serverless-wsgi": "^3.0.5"
-  }
+    "@cloudflare/vitest-plugin": "1.1.3",
+    "@types/node": "^26.6.5",
+    "@vitest/runner": "4.1.10",
+    "@vitest/snapshot": "4.1.10",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10",
+    "wrangler": "^4.150.0"
+  },
+  "private": true,
+  "scripts": {
+    "cf-typegen": "wrangler types",
+    "check": "tsc --noEmit && wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "e2e:dev": "wrangler dev --enable-containers=false",
+    "start": "wrangler dev",
+    "test": "vitest run"
+  },
+  "type": "module"
 }

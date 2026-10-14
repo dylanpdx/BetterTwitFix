@@ -14,3 +14,4 @@ template
 build
 .vscode/
 *.bat
+.wrangler/

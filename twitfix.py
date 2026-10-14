@@ -580,6 +580,10 @@ def api_v1_status(tweet_id):
 
     return activitymg.tweetDataToActivity(tweetData,embedIndex)
 
+@app.route("/container/health")
+def health():
+    return "OK!"
+
 def oEmbedGen(description, user, video_link, ttype,providerName=None):
     if providerName == None:
         providerName = config['config']['appname']

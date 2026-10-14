@@ -1,0 +1,17 @@
+__pycache__
+venv/
+links.json
+node_modules
+#SERVERLESS STUFF
+admin.env
+.env
+_meta
+.serverless
+db/
+.coverage
+htmlcov/
+template
+build
+.vscode/
+*.bat
+.wrangler/
