@@ -17,6 +17,7 @@
 <meta property="og:video:height" content="{{ media['size']['height'] }}" />
 <meta property="og:image" content="{{ media['thumbnail_url'] }}" />
 <meta property="og:description" content="{{ desc }}" />
+<meta property="og:type" content="video.other" />
 
 <link rel="alternate" href="{{ host }}/oembed.json?desc={{ urlUser }}&user={{ urlEncodedDesc }}&link={{ tweetLink }}&ttype=video&provider={{ appname|urlencode }}" type="application/json+oembed" title="{{ tweet['user_name'] }}">
 <meta http-equiv="refresh" content="1; url = {{ tweetLink }}" /> {% endblock %} {% block body %} Redirecting you to the tweet in a moment. <a href="{{ tweetLink }}">Or click here.</a>{% endblock %}
