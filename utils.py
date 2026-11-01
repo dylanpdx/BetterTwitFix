@@ -48,7 +48,7 @@ def fixMedia(mediaInfo):
     if 'video.twimg.com' not in mediaInfo['url'] or 'convert?url=' in mediaInfo['url'] or 'originalUrl' in mediaInfo:
         return mediaInfo
     mediaInfo["originalUrl"] = mediaInfo['url']
-    mediaInfo['url'] = mediaInfo['url'].replace("https://video.twimg.com",f"{config['config']['url']}/tvid").replace(".mp4","")
+    #mediaInfo['url'] = mediaInfo['url'].replace("https://video.twimg.com",f"{config['config']['url']}/tvid").replace(".mp4","")
     return mediaInfo
 
 def determineEmbedTweet(tweetData):
