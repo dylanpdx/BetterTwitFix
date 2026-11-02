@@ -509,8 +509,8 @@ def twitfix(sub_path):
             elif media['type'] == "video":
                 return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
             elif media['type'] == "gif":
-                if "originalUrl" in media and media["url"] != media["originalUrl"] and tryGifConversion:
-                    return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],media['url'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+                if "originalUrl" in media and tryGifConversion:
+                    return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],media['originalUrl'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
                 else:
                     return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
 
