@@ -1,6 +1,8 @@
-from numerize import numerize 
+from numerize import numerize
+import os
+import time
 
-failedToScan="Failed to scan your link! This may be due to an incorrect link, private/suspended account, deleted tweet, or recent changes to Twitter's API (Thanks, Elon!)."
+failedToScan="Failed to scan your link! This may be due to an incorrect link, private/suspended account, deleted tweet, or recent changes to Twitter's API."
 failedToScanExtra = "\n\nTwitter gave me this error: "
 tweetNotFound="Tweet not found."
 unknownError="Unknown Error"
@@ -9,6 +11,18 @@ tweetSuspended="This Tweet is from a suspended account."
 videoDescLimit=220
 tweetDescLimit=340
 providerLimit=220
+
+def getFailedToScan():
+    msg = failedToScan;
+    extra = os.getenv("VXTWITTER_FAILED_EXTRA",None)
+    extratimeout = os.getenv("VXTWITTER_FAILED_EXTRA_TIMEOUT",None)
+    if extra != None:
+        if extratimeout != None:
+            epoch = int(time.time())
+            if epoch > int(extratimeout):
+                return msg
+        msg = msg + "\n\nExtra info:"+extra
+        return msg
 
 def genLikesDisplay(vnf):
     if vnf['retweets'] > 0:

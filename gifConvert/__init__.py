@@ -50,7 +50,15 @@ def convert_video_to_avif(filename):
         fd,new_filename = tempfile.mkstemp(suffix=".avif")
         os.close(fd)
         print("converting gif w ffmpeg to avif")
-        subprocess.call(["ffmpeg","-nostdin","-y", "-i", filename,"-pix_fmt","yuv420p","-an","-c:v","libsvtav1","-crf","30","-b:v","0","-threads","4", new_filename], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        subprocess.call(["ffmpeg","-nostdin","-y", "-i", filename,
+                         "-pix_fmt","yuv420p","-an",
+                         "-c:v","libsvtav1",
+                         "-preset", "12",
+                         "-crf","35",
+                         "-b:v","0",
+                         "-g", "240",
+                         "-svtav1-params", "lp=2",
+                        new_filename], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         if os.path.isfile(new_filename) and os.path.getsize(new_filename) > 0:
             return new_filename
         else:

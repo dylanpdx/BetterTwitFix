@@ -38,7 +38,7 @@ testUserIDUrl = "https://twitter.com/i/user/"+str(testUserID)
 testUserWeirdURLs=["https://twitter.com/jack?lang=en","https://twitter.com/jack/with_replies","https://twitter.com/jack/media","https://twitter.com/jack/likes","https://twitter.com/jack/with_replies?lang=en","https://twitter.com/jack/media?lang=en","https://twitter.com/jack/likes?lang=en","https://twitter.com/jack/"]
 testTextTweet="https://twitter.com/jack/status/20"
 
-tokens=os.getenv("VXTWITTER_WORKAROUND_TOKENS",None).split(',')
+tokens=os.getenv("VXTWITTER_WORKAROUND_TOKENS","").split(',')
 
 def compareDict(original,compare):
     for key in original:
