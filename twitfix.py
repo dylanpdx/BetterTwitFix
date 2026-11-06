@@ -393,7 +393,7 @@ def twitfix(sub_path):
                 return userData
             else:
                 if userData is None:
-                    return message(msgs.failedToScan)
+                    return message(msgs.getFailedToScan())
                 return renderUserEmbed(userData)
         abort(404)
     twitter_url = f'https://twitter.com/i/status/{getTweetIdFromUrl(sub_path)}'
@@ -424,7 +424,7 @@ def twitfix(sub_path):
     tweetData = getTweetData(twitter_url,include_txt,include_rtf,tlLanguage=translationLang)
     if tweetData is None:
         log.error("Tweet Data Get failed for "+twitter_url)
-        return message(msgs.failedToScan)
+        return message(msgs.getFailedToScan())
     qrt = None
     if 'qrtURL' in tweetData and tweetData['qrtURL'] is not None:
         qrt = getTweetData(tweetData['qrtURL'],tlLanguage=translationLang)
@@ -514,7 +514,7 @@ def twitfix(sub_path):
                 else:
                     return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
 
-    return message(msgs.failedToScan)
+    return message(msgs.getFailedToScan())
 
 
 
