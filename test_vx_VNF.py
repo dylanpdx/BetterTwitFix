@@ -25,3 +25,8 @@ def test_multimediaTweetVNF():
 def test_pollTweetVNF():
     vnf = getVNFFromLink(testPollTweet)
     compareDict(testPollTweet_compare,vnf)
+
+def test_20images():
+    vnf = getVNFFromLink(test20Images)
+    assert len(vnf["mediaURLs"]) == 20
+    assert len(vnf["media_extended"]) == 20

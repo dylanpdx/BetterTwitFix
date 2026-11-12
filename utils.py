@@ -77,7 +77,13 @@ def mediaToGifConvert(media):
         media['url'] = gcApi + "/convert.avif?url=" + vurl
     return media
 
+def clampEmbedIndex(tweetData,embedIndex):
+    if embedIndex < 0 or embedIndex >= len(tweetData.get('media_extended') or []):
+        return -1
+    return embedIndex
+
 def determineMediaToEmbed(tweetData,embedIndex = -1,convertGif = True,isGeneratingActivity=False):
+    embedIndex = clampEmbedIndex(tweetData,embedIndex)
     if tweetData['allSameType'] and tweetData['media_extended'][0]['type'] == "image" and embedIndex == -1 and tweetData['combinedMediaUrl'] != None:
         return {"url":tweetData['combinedMediaUrl'],"type":"image"}
     else:

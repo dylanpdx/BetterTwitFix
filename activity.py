@@ -1,6 +1,6 @@
 import datetime
 import msgs
-from utils import determineEmbedTweet, determineMediaToEmbed, mediaToGifConvert
+from utils import determineEmbedTweet, determineMediaToEmbed, mediaToGifConvert, clampEmbedIndex
 from copy import deepcopy
 import html
 
@@ -42,6 +42,7 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
     #if embeddingMedia:
     #    media = determineMediaToEmbed(embedTweetData,embedIndex)
     gallery_mode = False
+    embedIndex = clampEmbedIndex(embedTweetData,embedIndex)
     if embedIndex >= 0:
         allMedia = [determineMediaToEmbed(embedTweetData,embedIndex)]
     elif len(allMedia) > 0 and allMedia[0]["type"] == "video":

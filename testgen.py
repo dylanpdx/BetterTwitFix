@@ -13,7 +13,8 @@ tests = {
     "testMixedMediaTweet":"https://twitter.com/bigbeerfest/status/1760638922084741177",
     "testVinePlayerTweet":"https://twitter.com/Roblox/status/583302104342638592",
     "testRetweetTweet":"https://twitter.com/pdxdylan/status/1828570470222045294",
-    "testGifTweet":"https://twitter.com/pdxdylan/status/2017012886430769609"
+    "testGifTweet":"https://twitter.com/pdxdylan/status/2017012886430769609",
+    "test20Images":"https://twitter.com/PopBase/status/2120974817755345312"
 }
 
 def getVNFFromLink(link):

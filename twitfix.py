@@ -14,7 +14,8 @@ import msgs
 import twExtract as twExtract
 from cache import addVnfToLinkCache,getVnfFromLinkCache
 import vxlogging as log
-from utils import getTweetIdFromUrl, pathregex, determineMediaToEmbed, determineEmbedTweet, BytesIOWrapper, fixMedia, indexOfAny, mediaToGifConvert
+from discordComponents import buildTweetComponents
+from utils import getTweetIdFromUrl, pathregex, determineMediaToEmbed, determineEmbedTweet, BytesIOWrapper, fixMedia, indexOfAny, mediaToGifConvert, clampEmbedIndex
 from vxApi import getApiResponse, getApiUserResponse
 from urllib.parse import urlparse 
 from PyRTF.Elements import Document
@@ -101,7 +102,7 @@ def getAppName(tweetData,appnameSuffix=""):
         appName = msgs.formatProvider(config['config']['appname']+appnameSuffix,tweetData)
     return appName
 
-def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",embedIndex=-1):
+def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",embedIndex=-1,discordComponents=False):
     qrt = tweetData['qrt']
     embedDesc = msgs.formatEmbedDesc("Image",tweetData['text'],qrt,tweetData['pollData'],tweetData["translation"])
 
@@ -130,6 +131,11 @@ def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",
 
     if "DiscordBot" in user_agent:
         singleImage = None
+
+    tweetLink=f'https://twitter.com/{tweetData["user_screen_name"]}/status/{tweetData["tweetID"]}'
+    components = None
+    if discordComponents:
+        components = buildTweetComponents(tweetData,discordComponents,embedDesc,tweetLink)
     
     return render_template("image.html",
                     tweet=tweetData,
@@ -142,14 +148,20 @@ def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",
                     appname=getAppName(tweetData,appnameSuffix),
                     color=config['config']['color'],
                     sicon="image",
-                    activityLink=generateActivityLink(tweetData,singleImage,"image/png",embedIndex)
+                    activityLink=None if components else generateActivityLink(tweetData,singleImage,"image/png",embedIndex),
+                    discord_components=components
                     )
 
-def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1):
+def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1,discordComponents=False):
     qrt = tweetData['qrt']
     embedDesc = msgs.formatEmbedDesc("Video",tweetData['text'],qrt,tweetData['pollData'],tweetData["translation"])
 
     mediaInfo=fixMedia(mediaInfo)
+
+    tweetLink=f'https://twitter.com/{tweetData["user_screen_name"]}/status/{tweetData["tweetID"]}'
+    components = None
+    if discordComponents:
+        components = buildTweetComponents(tweetData,discordComponents,embedDesc,tweetLink)
 
     appName = config['config']['appname']+appnameSuffix
     if 'Discord' not in user_agent:
@@ -165,7 +177,8 @@ def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1):
                     appname=appName,
                     color=config['config']['color'],
                     sicon="video",
-                    activityLink=generateActivityLink(tweetData,mediaInfo['url'],"video/mp4",embedIndex)
+                    activityLink=None if components else generateActivityLink(tweetData,mediaInfo['url'],"video/mp4",embedIndex),
+                    discord_components=components
                     )
 
 def renderTextTweetEmbed(tweetData,appnameSuffix=""):
@@ -463,15 +476,16 @@ def twitfix(sub_path):
         return send_file(BytesIOWrapper(rtf), mimetype='application/rtf', as_attachment=True, download_name=f'{tweetData["user_screen_name"]}_{tweetData["tweetID"]}.rtf')
 
     embedIndex = -1
-    # if url has /1, /2, /3, or /4, we'll use that as the index
-    numIdx=indexOfAny(splitPath,["1","2","3","4"]);
+    # if url has /1 through /20, that's the image we get
+    numIdx=indexOfAny(splitPath,[str(i) for i in range(1,21)])
     if numIdx != -1:
         embedIndex = int(splitPath[numIdx])-1
-        sub_path = sub_path[:-2]
+        sub_path = sub_path[:-(len(splitPath[numIdx])+1)]
         
     if isApiRequest: # Directly return the API response if the request is from the API
         return tweetData
     elif directEmbed: # direct embed
+        embedIndex = clampEmbedIndex(tweetData,embedIndex)
         embeddingMedia = tweetData['hasMedia']
         renderMedia = None
         if embeddingMedia:
@@ -487,6 +501,7 @@ def twitfix(sub_path):
                 return Response(render_template("rawvideo.html",media=renderMedia),headers={"Cache-Tag": "embed"})
     else: # full embed
         embedTweetData = determineEmbedTweet(tweetData)
+        embedIndex = clampEmbedIndex(embedTweetData,embedIndex)
         embeddingMedia = embedTweetData['hasMedia']
         
         if "article" in embedTweetData and embedTweetData["article"] is not None:
@@ -499,20 +514,23 @@ def twitfix(sub_path):
             suffix=""
             if "suffix" in media:
                 suffix = media["suffix"]
+            componentData = None
+            if "Discord" in user_agent and embedIndex == -1 and media['type'] != "video" and len(embedTweetData["media_extended"]) > 4: # video takes priority. iirc component embeds do not support videos
+                componentData = embedTweetData
             if media['type'] == "image":
                 singleImg = embedTweetData["combinedMediaUrl"]
                 if embedIndex != -1:
                     singleImg=embedTweetData["media_extended"][embedIndex]["url"]
                 if singleImg==None:
                     singleImg=media['url']
-                return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],singleImg, appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+                return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],singleImg, appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData),headers={"Cache-Tag": "embed"})
             elif media['type'] == "video":
-                return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+                return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData),headers={"Cache-Tag": "embed"})
             elif media['type'] == "gif":
                 if "originalUrl" in media and tryGifConversion:
-                    return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],media['originalUrl'] , appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+                    return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],media['originalUrl'] , appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData),headers={"Cache-Tag": "embed"})
                 else:
-                    return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex),headers={"Cache-Tag": "embed"})
+                    return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData),headers={"Cache-Tag": "embed"})
 
     return message(msgs.getFailedToScan())
 
