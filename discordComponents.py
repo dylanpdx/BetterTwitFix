@@ -39,7 +39,6 @@ def buildTweetComponents(tweetData, embedTweetData, desc, tweetLink):
             pass
 
     header = [
-        {"type":10,"content":f"-# {config['config']['appname']}"},
         {"type":10,"content":f"**{tweetData['user_name']} (@{tweetData['user_screen_name']})**"},
     ]
     if (len(desc)>max_size):
@@ -48,6 +47,9 @@ def buildTweetComponents(tweetData, embedTweetData, desc, tweetLink):
     footer = [{"type":12,"items":[{"media":{"url":url}} for url in shown]}]
     if hidden > 0:
         footer.append({"type":10,"content":f"-# See {hidden} more media items on the original post"})
+    epoch = str(tweetData["date_epoch"])
+    footerdisp = config['config']['appname'] + f" - <t:{epoch}:d> <t:{epoch}:t>"
+    footer.append({"type":10,"content":f"-# {footerdisp}"})
 
     descComponents = [descComponent] if desc.strip() else [] # this makes embeds fail, discord can;'t do empty components
     container["components"] = header + descComponents + footer
