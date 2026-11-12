@@ -69,7 +69,7 @@ def getApiResponse(tweet,include_txt=False,include_rtf=False):
         user = tweet["core"]["user_result"]["result"]
     elif "user_results" in tweet["core"]:
         user = tweet["core"]["user_results"]["result"]
-    userL = user["legacy"]
+    userL = user.get("legacy",{})
     media=[]
     media_extended=[]
     hashtags=[]

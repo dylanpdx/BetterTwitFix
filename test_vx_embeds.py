@@ -231,3 +231,8 @@ def test_embed_translated_subdomain():
     resp = client.get(testTextTweet.replace("https://twitter.com","https://ja.vxtwitter.com"),headers={"User-Agent":"test"})
     assert resp.status_code==200
     assert "→" in resp.text
+
+def test_embed_20_images():
+    resp = client.get(test20Images.replace("https://twitter.com","https://vxtwitter.com"),headers={"User-Agent":"Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)"})
+    assert resp.status_code==200
+    assert "discord:component-embed" in resp.text
