@@ -28,14 +28,14 @@ v2Features='{"longform_notetweets_inline_media_enabled":true,"super_follow_badge
 v2graphql_api="2OOZWmw8nAtUHVnXXQhgaA"
 
 v2AnonFeatures='{"creator_subscriptions_tweet_preview_api_enabled":true,"premium_content_api_read_enabled":false,"communities_web_enable_tweet_community_results_fetch":true,"c9s_tweet_anatomy_moderator_badge_enabled":true,"responsive_web_grok_analyze_button_fetch_trends_enabled":false,"responsive_web_grok_analyze_post_followups_enabled":true,"responsive_web_jetfuel_frame":true,"responsive_web_grok_share_attachment_enabled":true,"responsive_web_grok_annotations_enabled":false,"articles_preview_enabled":true,"responsive_web_edit_tweet_api_enabled":true,"graphql_is_translatable_rweb_tweet_is_translatable_enabled":true,"view_counts_everywhere_api_enabled":true,"longform_notetweets_consumption_enabled":true,"responsive_web_twitter_article_tweet_consumption_enabled":true,"tweet_awards_web_tipping_enabled":false,"responsive_web_grok_show_grok_translated_post":true,"responsive_web_grok_analysis_button_from_backend":true,"post_ctas_fetch_enabled":true,"creator_subscriptions_quote_tweet_preview_enabled":false,"freedom_of_speech_not_reach_fetch_enabled":true,"standardized_nudges_misinfo":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"longform_notetweets_inline_media_enabled":true,"profile_label_improvements_pcf_label_in_post_enabled":true,"responsive_web_profile_redirect_enabled":false,"rweb_tipjar_consumption_enabled":false,"verified_phone_label_enabled":false,"responsive_web_grok_image_annotation_enabled":true,"responsive_web_grok_imagine_annotation_enabled":true,"responsive_web_grok_community_note_auto_translation_is_enabled":false,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"responsive_web_graphql_timeline_navigation_enabled":true,"responsive_web_enhance_cards_enabled":false}'
-v2AnonGraphql_api="0aTrQMKgj95K791yXeNDRA"
+v2AnonGraphql_api="U8lc5aomF5krJzZ9vJ9wxg"
 gt_pattern = r'document\.cookie="gt=([^;]+);'
 
 androidGraphqlFeatures='{"grok_translations_community_note_translation_is_enabled":false,"super_follow_badge_privacy_enabled":true,"unified_cards_destination_url_params_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"super_follow_user_api_enabled":true,"profile_label_improvements_pcf_label_in_profile_enabled":true,"premium_content_api_read_enabled":false,"grok_translations_community_note_auto_translation_is_enabled":false,"android_graphql_skip_api_media_color_palette":true,"tweetypie_unmention_optimization_enabled":true,"longform_notetweets_consumption_enabled":true,"subscriptions_verification_info_enabled":true,"blue_business_profile_image_shape_enabled":true,"super_follow_exclusive_tweet_notifications_enabled":true,"longform_notetweets_inline_media_enabled":true,"grok_android_analyze_trend_fetch_enabled":false,"unified_cards_ad_metadata_container_dynamic_card_content_query_enabled":true,"super_follow_tweet_api_enabled":true,"articles_api_enabled":true,"android_ad_formats_media_component_render_overlay_enabled":true,"creator_subscriptions_tweet_preview_api_enabled":true,"freedom_of_speech_not_reach_fetch_enabled":true,"grok_translations_timeline_user_bio_auto_translation_is_enabled":false,"grok_translations_post_auto_translation_is_enabled":false,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"immersive_video_status_linkable_timestamps":true,"profile_label_improvements_pcf_label_in_post_enabled":true}'
 androidGraphql_api="Wrspae-uyGj-nWPyUqdUag"
 
 tweetDetailGraphqlFeatures='{"rweb_video_screen_enabled":false,"profile_label_improvements_pcf_label_in_post_enabled":true,"responsive_web_profile_redirect_enabled":false,"rweb_tipjar_consumption_enabled":false,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_timeline_navigation_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"premium_content_api_read_enabled":false,"communities_web_enable_tweet_community_results_fetch":true,"c9s_tweet_anatomy_moderator_badge_enabled":true,"responsive_web_grok_analyze_button_fetch_trends_enabled":false,"responsive_web_grok_analyze_post_followups_enabled":true,"responsive_web_jetfuel_frame":true,"responsive_web_grok_share_attachment_enabled":true,"responsive_web_grok_annotations_enabled":false,"articles_preview_enabled":true,"responsive_web_edit_tweet_api_enabled":true,"graphql_is_translatable_rweb_tweet_is_translatable_enabled":true,"view_counts_everywhere_api_enabled":true,"longform_notetweets_consumption_enabled":true,"responsive_web_twitter_article_tweet_consumption_enabled":true,"tweet_awards_web_tipping_enabled":false,"responsive_web_grok_show_grok_translated_post":true,"responsive_web_grok_analysis_button_from_backend":true,"post_ctas_fetch_enabled":true,"creator_subscriptions_quote_tweet_preview_enabled":false,"freedom_of_speech_not_reach_fetch_enabled":true,"standardized_nudges_misinfo":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"longform_notetweets_inline_media_enabled":true,"responsive_web_grok_image_annotation_enabled":true,"responsive_web_grok_imagine_annotation_enabled":true,"responsive_web_grok_community_note_auto_translation_is_enabled":false,"responsive_web_enhance_cards_enabled":false}'
-tweetDetailGraphql_api="Kzfv17rukSzjT96BerOWZA"
+tweetDetailGraphql_api="qpemjmVMoTWDvcRT43JIVQ"
 
 # this is for UserTweets endpoint
 tweetFeedGraphqlFeatures='{"rweb_video_screen_enabled":false,"profile_label_improvements_pcf_label_in_post_enabled":true,"rweb_tipjar_consumption_enabled":true,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_timeline_navigation_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"premium_content_api_read_enabled":false,"communities_web_enable_tweet_community_results_fetch":true,"c9s_tweet_anatomy_moderator_badge_enabled":true,"responsive_web_grok_analyze_button_fetch_trends_enabled":false,"responsive_web_grok_analyze_post_followups_enabled":true,"responsive_web_jetfuel_frame":false,"responsive_web_grok_share_attachment_enabled":true,"articles_preview_enabled":true,"responsive_web_edit_tweet_api_enabled":true,"graphql_is_translatable_rweb_tweet_is_translatable_enabled":true,"view_counts_everywhere_api_enabled":true,"longform_notetweets_consumption_enabled":true,"responsive_web_twitter_article_tweet_consumption_enabled":true,"tweet_awards_web_tipping_enabled":false,"responsive_web_grok_show_grok_translated_post":false,"responsive_web_grok_analysis_button_from_backend":true,"creator_subscriptions_quote_tweet_preview_enabled":false,"freedom_of_speech_not_reach_fetch_enabled":true,"standardized_nudges_misinfo":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"longform_notetweets_inline_media_enabled":true,"responsive_web_grok_image_annotation_enabled":true,"responsive_web_enhance_cards_enabled":false}'
@@ -280,7 +280,7 @@ def extractStatusV2(url,workaroundTokens,tlLanguage=None):
     def request_with_token(twid, authToken):
         vars = json.loads('{"includeTweetImpression":true,"includeHasBirdwatchNotes":false,"includeEditPerspective":false,"rest_ids":["x"],"includeEditControl":true,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true}')
         vars['rest_ids'][0] = str(twid)
-        tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2graphql_api}/TweetResultsByIdsQuery?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2Features)}",authToken=authToken,language=tlLanguage)
+        tweet = twitterApiGet(f"https://x.com/i/api/graphql/{v2graphql_api}/TweetResultsByIdsQuery?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(v2Features)}",authToken=authToken,language=tlLanguage,userAgent="TwitterAndroid/11.61.0-release.0 (311610000-r-0) G011A/9 (google;G011A;google;G011A;0;;1;2016)")
         try:
             rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
             print(f"Twitter Token Rate limit remaining: {rateLimitRemaining}")
@@ -373,6 +373,65 @@ def extractStatusV2Android(url,workaroundTokens,tlLanguage=None):
                 return {'error':'Tweet not found (404); May be due to invalid tweet, changes in Twitter\'s API, or a protected account.'}
         except Exception as e:
             print(f"Exception in extractStatusV2Android: {str(e)}")
+            raise TwExtractError(400, "Extract error")
+
+        return tweet
+    return parallel_token_request(twid, tokens, request_with_token)
+
+def extractStatusV2IOS(url,workaroundTokens,tlLanguage=None):
+    # get tweet ID
+    m = re.search(pathregex, url)
+    if m is None:
+        raise TwExtractError(400, "Extract error (url not valid)")
+    twid = m.group(2)
+    if workaroundTokens == None:
+        raise TwExtractError(400, "Extract error (no tokens defined)")
+    tokens = workaroundTokens
+    random.shuffle(tokens)
+    def request_with_token(twid, authToken):
+        try:
+            vars = json.loads('{"referrer":"home","includeTweetImpression":true,"includeHasBirdwatchNotes":false,"isReaderMode":false,"includeEditPerspective":false,"includeEditControl":true,"focal_tweet_id":0,"includeCommunityTweetRelationship":true,"includeTweetVisibilityNudge":true,"ranking_mode": "Relevance"}')
+            vars['focal_tweet_id'] = int(twid)
+            tweet = twitterApiGet(f"https://x.com/i/api/graphql/b-bCN9RelT8k0fCr_s2BFg/ConversationTimeline?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(androidGraphqlFeatures)}", authToken=authToken,btoken=androidBearer,userAgent="TwitterAndroid/11.61.0-release.0 (311610000-r-0) G011A/9 (google;G011A;google;G011A;0;;1;2016)",language=tlLanguage)
+            try:
+                rateLimitRemaining = tweet.headers.get("x-rate-limit-remaining")
+                print(f"Twitter IOS Token Rate limit remaining: {rateLimitRemaining}")
+            except: # for some reason the header is not always present
+                pass
+            if tweet.status_code == 429:
+                print("Rate limit reached for android token")
+                # try another token
+                raise TwExtractError(400, "Extract error: rate limit reached")
+            output = tweet.json()
+            
+            if "errors" in output:
+                print(f"Error in output: {json.dumps(output['errors'])}")
+                # try another token
+                raise TwExtractError(400, "Extract error: errors in output - "+json.dumps(output['errors']))
+            entries = None
+            for instruction in output['data']['threaded_conversation_with_injections_v2']['instructions']:
+                if instruction["__typename"] == "TimelineAddEntries":
+                    entries = instruction['entries']
+                    break
+            tweetEntry=None
+            for entry in entries:
+                if 'content' not in entry:
+                    print("Tweet content not found in entry")
+                    continue
+                if '__typename' not in entry['content'] or entry['content']['__typename'] != 'TimelineTimelineItem' or entry['content']['content']['__typename'] != 'TimelineTweet':
+                    continue
+                result = entry['content']['content']['tweet_results']['result']
+                if '__typename' not in result or result['__typename'] != 'Tweet':
+                    continue
+                if 'rest_id' in result and result['rest_id'] == twid:
+                    tweetEntry=result
+                    break
+            tweet=tweetEntry
+            if tweet is None:
+                print("Tweet 404")
+                return {'error':'Tweet not found (404); May be due to invalid tweet, changes in Twitter\'s API, or a protected account.'}
+        except Exception as e:
+            print(f"Exception in extractStatusV2IOS: {str(e)}")
             raise TwExtractError(400, "Extract error")
 
         return tweet
@@ -511,7 +570,7 @@ def fixTweetData(tweet):
     return tweet
 
 def extractStatus(url,workaroundTokens=None,tlLanguage=None):
-    methods=[extractStatusV2Rest_Anon,extractStatusV2,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2TweetDetail]
+    methods=[extractStatusV2Rest_Anon,extractStatusV2TweetDetail,extractStatusV2Rest,extractStatusV2Android]#,extractStatusV2]
     if tlLanguage is not None: # prioritize endpoints that return translations
         methods = [extractStatusV2Rest,extractStatusV2TweetDetail,extractStatusV2Android,extractStatusV2,extractStatusV2Rest_Anon]
     for method in methods:

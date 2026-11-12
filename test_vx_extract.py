@@ -32,6 +32,10 @@ def test_twextract_v2AndroidAPI():
     tweet = twExtract.extractStatusV2Android(testMediaTweet,workaroundTokens=tokens)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
 
+def test_twextract_v2iOSAPI():
+    tweet = twExtract.extractStatusV2IOS("https://twitter.com/i/status/2118545187425173643",workaroundTokens=tokens)['legacy']
+    assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
+
 def test_twextract_extractStatusV2TweetDetails():
     tweet = twExtract.extractStatusV2TweetDetail(testMediaTweet,workaroundTokens=tokens)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
@@ -102,7 +106,7 @@ def test_twextract_pollTweetExtract(): # basic check if poll data exists
     assert tweet['card']['name']=="poll2choice_text_only"
 
 def test_twextract_NSFW_TweetExtract():
-    tweet = twExtract.extractStatus(testNSFWTweet,workaroundTokens=tokens) # For now just test that there's no error
+    tweet = twExtract.extractStatusV2TweetDetail(testNSFWTweet,workaroundTokens=tokens) # For now just test that there's no error
 
 def test_twextract_feed():
     tweets = twExtract.extractUserFeedFromId(testUserID,workaroundTokens=tokens) # For now just test that there's no error
