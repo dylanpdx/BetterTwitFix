@@ -47,8 +47,8 @@ functions:
   vxTwitterApp:
     handler: wsgi_handler.handler
     url: true
-    timeout: 15
-    memorySize: 128
+    timeout: 10
+    memorySize: 512
     layers:
       - Ref: PythonRequirementsLambdaLayer
 
