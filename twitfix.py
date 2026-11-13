@@ -522,7 +522,9 @@ def twitfix(sub_path):
             if "suffix" in media:
                 suffix = media["suffix"]
             componentData = None
-            if "Discord" in user_agent and embedIndex == -1 and len(embedTweetData["media_extended"]) > 4:
+            mediaList = embedTweetData["media_extended"]
+            multipleNonImage = len(mediaList) > 1 and any(m["type"] != "image" for m in mediaList)
+            if "Discord" in user_agent and embedIndex == -1 and (len(mediaList) > 4 or multipleNonImage): # component embeds can show mixed media??
                 componentData = embedTweetData
             if media['type'] == "image":
                 singleImg = embedTweetData["combinedMediaUrl"]
