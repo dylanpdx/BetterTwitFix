@@ -22,7 +22,7 @@ def getFailedToScan():
             if epoch > int(extratimeout):
                 return msg
         msg = msg + "\n\nExtra info:"+extra
-        return msg
+    return msg
 
 def genLikesDisplay(vnf):
     if vnf['retweets'] > 0:

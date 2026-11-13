@@ -102,7 +102,7 @@ def getAppName(tweetData,appnameSuffix=""):
         appName = msgs.formatProvider(config['config']['appname']+appnameSuffix,tweetData)
     return appName
 
-def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",embedIndex=-1,discordComponents=False):
+def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",embedIndex=-1,discordComponents=False,componentPage=1):
     qrt = tweetData['qrt']
     embedDesc = msgs.formatEmbedDesc("Image",tweetData['text'],qrt,tweetData['pollData'],tweetData["translation"])
 
@@ -118,7 +118,7 @@ def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",
                 images.append(extended["url"])
             elif extended["type"] == "gif":
                 converted = mediaToGifConvert(deepcopy(extended))
-                if converted["url"] != extended["url"]:
+                if converted["url"] != extended["url"] or "/convert.avif?url=" in converted["url"]:
                     images.append(converted["url"])
 
     if singleImage.startswith("https://pbs.twimg.com") and "?" not in singleImage:
@@ -135,7 +135,7 @@ def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",
     tweetLink=f'https://twitter.com/{tweetData["user_screen_name"]}/status/{tweetData["tweetID"]}'
     components = None
     if discordComponents:
-        components = buildTweetComponents(tweetData,discordComponents,embedDesc,tweetLink)
+        components = buildTweetComponents(tweetData,discordComponents,embedDesc,tweetLink,componentPage)
     
     return render_template("image.html",
                     tweet=tweetData,
@@ -152,7 +152,7 @@ def renderImageTweetEmbed(tweetData,imagesExtended,singleImage,appnameSuffix="",
                     discord_components=components
                     )
 
-def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1,discordComponents=False):
+def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1,discordComponents=False,componentPage=1):
     qrt = tweetData['qrt']
     embedDesc = msgs.formatEmbedDesc("Video",tweetData['text'],qrt,tweetData['pollData'],tweetData["translation"])
 
@@ -161,7 +161,7 @@ def renderVideoTweetEmbed(tweetData,mediaInfo,appnameSuffix="",embedIndex=-1,dis
     tweetLink=f'https://twitter.com/{tweetData["user_screen_name"]}/status/{tweetData["tweetID"]}'
     components = None
     if discordComponents:
-        components = buildTweetComponents(tweetData,discordComponents,embedDesc,tweetLink)
+        components = buildTweetComponents(tweetData,discordComponents,embedDesc,tweetLink,componentPage)
 
     appName = config['config']['appname']+appnameSuffix
     if 'Discord' not in user_agent:
@@ -481,7 +481,14 @@ def twitfix(sub_path):
     if numIdx != -1:
         embedIndex = int(splitPath[numIdx])-1
         sub_path = sub_path[:-(len(splitPath[numIdx])+1)]
-        
+
+    # if url has /p2, /p3 etc, show that page of the gallery. i doubt twitter will ever implement >20 images but you never know
+    componentPage = 1
+    for segment in splitPath:
+        if len(segment) > 1 and segment[0] in ["p","P"] and segment[1:].isdigit():
+            componentPage = max(1,int(segment[1:]))
+            break
+
     if isApiRequest: # Directly return the API response if the request is from the API
         return tweetData
     elif directEmbed: # direct embed
@@ -515,7 +522,7 @@ def twitfix(sub_path):
             if "suffix" in media:
                 suffix = media["suffix"]
             componentData = None
-            if "Discord" in user_agent and embedIndex == -1 and media['type'] != "video" and len(embedTweetData["media_extended"]) > 4: # video takes priority. iirc component embeds do not support videos
+            if "Discord" in user_agent and embedIndex == -1 and len(embedTweetData["media_extended"]) > 4:
                 componentData = embedTweetData
             if media['type'] == "image":
                 singleImg = embedTweetData["combinedMediaUrl"]
@@ -523,14 +530,14 @@ def twitfix(sub_path):
                     singleImg=embedTweetData["media_extended"][embedIndex]["url"]
                 if singleImg==None:
                     singleImg=media['url']
-                return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],singleImg, appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData),headers={"Cache-Tag": "embed"})
+                return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],singleImg, appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData,componentPage=componentPage),headers={"Cache-Tag": "embed"})
             elif media['type'] == "video":
-                return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData),headers={"Cache-Tag": "embed"})
+                return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData,componentPage=componentPage),headers={"Cache-Tag": "embed"})
             elif media['type'] == "gif":
                 if "originalUrl" in media and tryGifConversion:
-                    return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],media['originalUrl'] , appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData),headers={"Cache-Tag": "embed"})
+                    return Response(renderImageTweetEmbed(tweetData,embedTweetData["media_extended"],media['originalUrl'] , appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData,componentPage=componentPage),headers={"Cache-Tag": "embed"})
                 else:
-                    return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData),headers={"Cache-Tag": "embed"})
+                    return Response(renderVideoTweetEmbed(tweetData,media,appnameSuffix=suffix,embedIndex=embedIndex,discordComponents=componentData,componentPage=componentPage),headers={"Cache-Tag": "embed"})
 
     return message(msgs.getFailedToScan())
 
