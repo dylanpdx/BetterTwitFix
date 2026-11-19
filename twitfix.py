@@ -23,6 +23,7 @@ from PyRTF.document.section import Section
 from PyRTF.document.paragraph import Paragraph
 from copy import deepcopy
 import json
+import compression_helper
 import translation
 import activity as activitymg
 app = Flask(__name__)
@@ -81,17 +82,26 @@ def message(text):
         url     = config['config']['url'] )
     return Response(rendered, mimetype='text/html',headers={"Cache-Tag": "message", "Cache-Control": "max-age=1760, public"})
 
+def activityEnabled():
+    return not ('LegacyEmbed' in user_agent or "Discord" not in user_agent) # TODO: Clean up; This is a hacky fix to make the new activity embed not trigger
+
 def generateActivityLink(tweetData,media=None,mediatype=None,embedIndex=-1):
-    global user_agent
-    if 'LegacyEmbed' in user_agent or "Discord" not in user_agent: # TODO: Clean up; This is a hacky fix to make the new activity embed not trigger
+    if not activityEnabled():
         return None
     try:
-        embedIndex = embedIndex+1
-
-        extras=""
+        lang = ""
         if tweetData["translation"] is not None:
-            extras+=activityseparator+tweetData["translation"]["destination_language"]
-        return f"{config['config']['url']}/users/{tweetData['user_screen_name']}/statuses/{str(embedIndex)}{activityseparator}{tweetData['tweetID']}{extras}"
+            lang = tweetData["translation"]["destination_language"]
+        # format: {embedIndex+1}{activityseparator}{tweetID}{activityseparator}{lang}{activityseparator}{activityData}
+        # activityData is already generated here
+        link = f"{config['config']['url']}/users/{tweetData['user_screen_name']}/statuses/{str(embedIndex+1)}{activityseparator}{tweetData['tweetID']}{activityseparator}{lang}"
+        try:
+            activityData = compression_helper.pack(activitymg.tweetDataToActivity(tweetData,embedIndex))
+            if len(activityData) <= compression_helper.MAX_DATA_LEN:
+                link += activityseparator+activityData
+        except Exception as e:
+            log.error("Error packing activity data: "+str(e))
+        return link
     except Exception as e:
         log.error("Error generating activity link: "+str(e))
         return None
@@ -517,7 +527,7 @@ def twitfix(sub_path):
             return Response(renderTextTweetEmbed(tweetData),headers={"Cache-Tag": "embed"})
         else:
             tryGifConversion = "Discord" in user_agent
-            media = determineMediaToEmbed(embedTweetData,embedIndex,convertGif=tryGifConversion,isGeneratingActivity=generateActivityLink(tweetData) != None)
+            media = determineMediaToEmbed(embedTweetData,embedIndex,convertGif=tryGifConversion,isGeneratingActivity=activityEnabled())
             suffix=""
             if "suffix" in media:
                 suffix = media["suffix"]
@@ -583,11 +593,16 @@ def api_v1_status(tweet_id):
             embedIndex = int(tweet_id[0])-1
             tweet_id = int(tweet_id[1:])
         else:
-            args = tweet_id.split(activityseparator)
+            args = tweet_id.split(activityseparator,3) # since activityData is base62 and might have the separator inside it,  max split of 3
             embedIndex = int(args[0])-1
             tweet_id = int(args[1])
-            if len(args)>2:
+            if len(args)>2 and args[2] != "":
                 lang=args[2]
+            if len(args)>3:
+                activityData = compression_helper.unpack(args[3])
+                if isinstance(activityData, dict):
+                    return activityData
+                log.warn("activityData == None!")
     except (ValueError, IndexError):
         abort(400)
     twitter_url=f"https://twitter.com/i/status/{tweet_id}"
