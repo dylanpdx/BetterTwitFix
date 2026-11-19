@@ -8,7 +8,7 @@ import json
 import zlib
 import string
 
-MAX_DATA_LEN = 3000
+MAX_DATA_LEN = 1400
 MAX_DECOMPRESSED_LEN = 512 * 1024
 
 ALPHABET = string.digits + string.ascii_uppercase + string.ascii_lowercase
