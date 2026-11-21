@@ -1,4 +1,4 @@
-pymongo==4.8.0
+pymongo==4.15.3
 boto3==1.36.6
 requests==2.32.3
 Pillow==10.4.0
