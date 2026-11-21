@@ -3,7 +3,7 @@ boto3==1.36.6
 requests==2.32.3
 Pillow==10.4.0
 Flask==2.2.3
-Flask-Cors==4.0.0
+Flask-Cors==6.0.1
 Werkzeug==2.3.7
 numerize==0.12
 oauthlib==3.2.2
