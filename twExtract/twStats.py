@@ -2,6 +2,7 @@
 # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html
 # https://github.com/awslabs/aws-embedded-metrics-python
 # TODO: this needs to be updated if/when moved to different hosting 
+# for graphing in AWS, use "Sample Count" statistic
 
 import contextvars
 import json
@@ -55,20 +56,29 @@ def record(method, result, duration_ms, rate_limit_remaining=None):
     directives = [
         {
             "Namespace": NAMESPACE,
-            "Dimensions": 
+            "Dimensions":
             [
                 [],
-                ["Method"],
+                ["Method"]
+            ],
+            "Metrics":
+            [
+                {
+                    "Name": "AttemptSuccess",
+                    "Unit": "Count"
+                }
+            ]
+        },
+        {
+            "Namespace": NAMESPACE,
+            "Dimensions":
+            [
                 ["Result"]
             ],
-            "Metrics": 
+            "Metrics":
             [
                 {
                     "Name": "Attempts",
-                    "Unit": "Count"
-                },
-                {
-                    "Name": "AttemptSuccess",
                     "Unit": "Count"
                 }
             ]
@@ -123,17 +133,26 @@ def record_status(retrieved_by, success, duration_ms, attempts):
             "Dimensions":
             [
                 [],
-                ["RetrievedBy"],
                 ["Source"]
             ],
-            "Metrics": 
+            "Metrics":
+            [
+                {
+                    "Name": "StatusSuccess",
+                    "Unit": "Count"
+                }
+            ]
+        },
+        {
+            "Namespace": NAMESPACE,
+            "Dimensions":
+            [
+                ["RetrievedBy"]
+            ],
+            "Metrics":
             [
                 {
                     "Name": "StatusRequests",
-                    "Unit": "Count"
-                },
-                {
-                    "Name": "StatusSuccess",
                     "Unit": "Count"
                 }
             ]
