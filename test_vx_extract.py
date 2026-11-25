@@ -10,40 +10,40 @@ def test_twextract_syndicationAPI():
     assert utils.stripEndTCO(utils.stripEndTCO(tweet["full_text"]))==testMediaTweet_compare['text']
 
 def test_twextract_extractStatusV2Rest():
-    tweet = twExtract.extractStatusV2Rest(testTextTweet,None)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_RESULT_BY_REST_ID,testTextTweet,None)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testTextTweet_compare['text']
-    tweet = twExtract.extractStatusV2Rest(testVideoTweet,None)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_RESULT_BY_REST_ID,testVideoTweet,None)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testVideoTweet_compare['text']
-    tweet = twExtract.extractStatusV2Rest(testMediaTweet,None)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_RESULT_BY_REST_ID,testMediaTweet,None)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
-    tweet = twExtract.extractStatusV2Rest(testMultiMediaTweet,None)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_RESULT_BY_REST_ID,testMultiMediaTweet,None)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])[:94]==testMultiMediaTweet_compare['text'][:94]
     
 
 def test_twextract_v2API_Anon():
-    tweet = twExtract.extractStatusV2Rest_Anon(testMediaTweet,workaroundTokens=tokens)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_RESULT_BY_REST_ID_ANON,testMediaTweet,workaroundTokens=tokens)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
 
 def test_twextract_v2API():
-    tweet = twExtract.extractStatusV2(testMediaTweet,workaroundTokens=tokens)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_RESULTS_BY_IDS,testMediaTweet,workaroundTokens=tokens)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
 
 def test_twextract_v2AndroidAPI():
-    tweet = twExtract.extractStatusV2Android(testMediaTweet,workaroundTokens=tokens)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.CONVERSATION_TIMELINE_V2,testMediaTweet,workaroundTokens=tokens)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
 
 def test_twextract_v2iOSAPI():
-    tweet = twExtract.extractStatusV2IOS("https://twitter.com/i/status/2118545187425173643",workaroundTokens=tokens)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.CONVERSATION_TIMELINE,"https://twitter.com/i/status/2118545187425173643",workaroundTokens=tokens)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
 
 def test_twextract_extractStatusV2TweetDetails():
-    tweet = twExtract.extractStatusV2TweetDetail(testMediaTweet,workaroundTokens=tokens)['legacy']
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_DETAIL,testMediaTweet,workaroundTokens=tokens)['legacy']
     assert utils.stripEndTCO(tweet["full_text"])==testMediaTweet_compare['text']
 
 ## Tweet retrieve tests ##
     
 def test_twextract_extractV2():
-    tweet = twExtract.extractStatusV2(testTextTweet,workaroundTokens=tokens)
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_RESULTS_BY_IDS,testTextTweet,workaroundTokens=tokens)
 
 def test_twextract_UserExtract():
     rawUserData = twExtract.extractUser(testUser,workaroundTokens=tokens)
@@ -106,7 +106,7 @@ def test_twextract_pollTweetExtract(): # basic check if poll data exists
     assert tweet['card']['name']=="poll2choice_text_only"
 
 def test_twextract_NSFW_TweetExtract():
-    tweet = twExtract.extractStatusV2TweetDetail(testNSFWTweet,workaroundTokens=tokens) # For now just test that there's no error
+    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_DETAIL,testNSFWTweet,workaroundTokens=tokens) # For now just test that there's no error
 
 def test_twextract_feed():
     tweets = twExtract.extractUserFeedFromId(testUserID,workaroundTokens=tokens) # For now just test that there's no error

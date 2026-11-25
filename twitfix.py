@@ -382,6 +382,7 @@ def twitfix(sub_path):
         user_agent = "unknown"
 
     isApiRequest=subdomain=="api"
+    twExtract.twStats.set_source(twExtract.twStats.SOURCE_API if isApiRequest else twExtract.twStats.SOURCE_EMBED)
     if not isApiRequest and (subdomain=="l" or subdomain=="old") and "Discord" in user_agent:
         user_agent = user_agent.replace("Discord","LegacyEmbed") # TODO: Clean up; This is a hacky fix to make the new activity embed not trigger
     if sub_path in staticFiles:
@@ -587,6 +588,7 @@ def rendercombined():
 
 @app.route("/api/v1/statuses/<string:tweet_id>")
 def api_v1_status(tweet_id):
+    twExtract.twStats.set_source(twExtract.twStats.SOURCE_ACTIVITY)
     lang = None
     try:
         if activityseparator not in tweet_id: #old embeds
