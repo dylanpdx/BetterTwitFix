@@ -262,7 +262,7 @@ def extractStatusGraphql(query, url, workaroundTokens=None, tlLanguage=None):
                 print(f"[{name}] Tweet 404")
                 return {'error':'Tweet not found (404); May be due to invalid tweet, changes in Twitter\'s API, or a protected account.'}
             resultstatus = twStats.UNAVAILABLE if 'error' in tweet else twStats.OK # note: ERROR not ERROR(S), set in methods.py parser i.e parse_results_list
-            # maybe 
+            # maybe eventually refactor this so that i don't get confused between error/errors
             return tweet
         except Exception as e:
             print(f"[{name}] Request failed: {e}")

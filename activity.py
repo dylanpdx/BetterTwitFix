@@ -2,20 +2,27 @@ import datetime
 import msgs
 from utils import determineEmbedTweet, determineMediaToEmbed, mediaToGifConvert, clampEmbedIndex
 from copy import deepcopy
+from numerize import numerize
 import html
 
 def tweetDataToActivity(tweetData,embedIndex = -1):
     content=""
 
+    likes = tweetData['likes']
+    retweets = tweetData['retweets']
+    likesdisp = "💖" + numerize.numerize(likes) + " 🔁" + numerize.numerize(retweets)
+
     if tweetData['replyingTo'] is not None:
         content += f"<blockquote>↪️ <i>Replying to @{tweetData['replyingTo']}</i></blockquote>"
 
+    # TODO: for long posts, maybe cap mainText to 2000 chars so the likes display can fit?
     mainText = html.escape(tweetData['text'])
     if tweetData["translation"] is not None:
         content += f"<blockquote>🌐 <i>{tweetData['translation']['source_language'].upper()}→{tweetData['translation']['destination_language'].upper()}</i></blockquote>"
         mainText=html.escape(tweetData['translation']["text"])
         
     content+=f"<p>{mainText}</p>"
+    content += f"<code>{likesdisp}</code>\n\n"
 
     attachments=[]
     if tweetData['qrt'] is not None:
@@ -29,8 +36,6 @@ def tweetDataToActivity(tweetData,embedIndex = -1):
     content = content.replace("\n","<br>")
     #if media is not None:
     #    attachments.append({"type":mediatype,"url":media})
-    likes = tweetData['likes']
-    retweets = tweetData['retweets']
 
     # convert date epoch to iso format
     date = tweetData['date_epoch']
