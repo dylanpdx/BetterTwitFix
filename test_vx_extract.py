@@ -106,7 +106,7 @@ def test_twextract_pollTweetExtract(): # basic check if poll data exists
     assert tweet['card']['name']=="poll2choice_text_only"
 
 def test_twextract_NSFW_TweetExtract():
-    tweet = twExtract.extractStatusGraphql(twExtract.TWEET_DETAIL,testNSFWTweet,workaroundTokens=tokens) # For now just test that there's no error
+    tweet = twExtract.extractStatus(testNSFWTweet,workaroundTokens=tokens) # For now just test that there's no error
 
 def test_twextract_feed():
     tweets = twExtract.extractUserFeedFromId(testUserID,workaroundTokens=tokens) # For now just test that there's no error

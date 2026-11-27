@@ -212,6 +212,14 @@ def _tweet_id(url):
         raise TwExtractError(400, "Extract error (url not valid)")
     return m.group(2)
 
+def _graphqlUrl(query, idInput):
+    vars = dict(query["variables"])
+    vars[query["id_key"]] = query["id_value"](idInput)
+    requestUrl = f"https://x.com/i/api/graphql/{query['query_id']}/{query['operation']}?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(query['features'])}"
+    if query.get("field_toggles"):
+        requestUrl += f"&fieldToggles={urllib.parse.quote(query['field_toggles'])}"
+    return requestUrl
+
 def extractStatusGraphql(query, url, workaroundTokens=None, tlLanguage=None):
     name = query["name"]
     twid = _tweet_id(url)
@@ -223,10 +231,8 @@ def extractStatusGraphql(query, url, workaroundTokens=None, tlLanguage=None):
     else:
         tokens = [None]
 
-    vars = dict(query["variables"])
-    vars[query["id_key"]] = query["id_value"](twid)
-    requestUrl = f"https://x.com/i/api/graphql/{query['query_id']}/{query['operation']}?variables={urllib.parse.quote(json.dumps(vars))}&features={urllib.parse.quote(query['features'])}"
-    guestToken = getGuestToken() if query["guest_token"] else None
+    requestUrl = _graphqlUrl(query, twid)
+    guestToken = getGuestToken() if query["guest_token"] and tokens == [None] else None
 
     lastError = None
     for authToken in tokens:
@@ -256,6 +262,7 @@ def extractStatusGraphql(query, url, workaroundTokens=None, tlLanguage=None):
                 print(f"[{name}] Tweet 404")
                 return {'error':'Tweet not found (404); May be due to invalid tweet, changes in Twitter\'s API, or a protected account.'}
             resultstatus = twStats.UNAVAILABLE if 'error' in tweet else twStats.OK # note: ERROR not ERROR(S), set in methods.py parser i.e parse_results_list
+            # maybe 
             return tweet
         except Exception as e:
             print(f"[{name}] Request failed: {e}")
@@ -299,89 +306,76 @@ def extractStatus(url,workaroundTokens=None,tlLanguage=None):
     twStats.record_status(None, False, (time.monotonic() - start) * 1000, len(methods))
     raise TwExtractError(400, "Extract error")
 
+def _isFinalUserError(e): # this user is p much a dead end 
+    return isinstance(e, TwExtractError) and (e.code == 404 or 'suspended' in e.msg or e.msg == 'User not found.')
+
+def _graphqlGet(query, requestUrl, authToken):
+    if query.get("transaction_id"):
+        headers = getAuthHeaders(query["bearer"], authToken=authToken)
+        headers["x-client-transaction-id"] = twUtils.generate_transaction_id("GET", requestUrl.split("x.com", 1)[1].split("?", 1)[0])
+        return requests.get(requestUrl, headers=headers)
+    return twitterApiGet(requestUrl, btoken=query["bearer"], authToken=authToken, userAgent=query["user_agent"])
+
+def _graphqlWithTokens(query, idInput, workaroundTokens, handle):
+    name = query["name"]
+    tokens = [t for t in (workaroundTokens or []) if not t.startswith("oa|")] # oauth token not supported atm
+    if not tokens:
+        raise TwExtractError(400, f"{name}: Extract error (no tokens defined)")
+    requestUrl = _graphqlUrl(query, idInput)
+    lastError = None
+    for authToken in random.sample(tokens, len(tokens)):
+        try:
+            response = _graphqlGet(query, requestUrl, authToken)
+            print(f"[{name}] Rate limit remaining: {response.headers.get('x-rate-limit-remaining')}")
+            if response.status_code == 429:
+                raise TwExtractError(429, f"{name}: rate limit reached")
+            output = response.json()
+            if "errors" in output:
+                error = output["errors"][0]
+                raise TwExtractError(error.get("code", 400), error.get("message", "Unknown error"))
+            return handle(output)
+        except Exception as e:
+            if _isFinalUserError(e):
+                raise
+            print(f"[{name}] Request failed: {e}")
+            lastError = e
+    raise TwExtractError(400, f"{name}: all tokens failed. Last error: {lastError}")
+
+def extractUserGraphql(query, userInput, workaroundTokens):
+    def handle(output):
+        user = query["parser"](output, **query["parser_args"])
+        if user is None:
+            raise TwExtractError(404, "User not found.")
+        if user.get('__typename') == 'UserUnavailable':
+            raise TwExtractError(404, user.get('message', 'User unavailable'))
+        return {"data": {"user": {"result": user}}}
+    return _graphqlWithTokens(query, userInput, workaroundTokens, handle)
+
 def extractUser(url,workaroundTokens):
-    useId=True
     m = re.search(userIDregex, url)
-    if m is None:
+    if m is not None:
+        methods = GET_USER_METHODS_ID
+    else:
         m = re.search(userregex, url)
         if m is None:
             raise TwExtractError(400, "Invalid URL")
-        else:
-            useId=False
-    screen_name = m.group(1)
-    # get user
-    tokens = workaroundTokens
-    random.shuffle(tokens)
-    for authToken in tokens:
-        if authToken.startswith("oa|"): # oauth token not supported atm
-            continue
+        methods = GET_USER_METHODS_SCREEN_NAME
+    userInput = m.group(1)
+    for method in methods:
         try:
-            reqHeaders = getAuthHeaders(v2bearer,authToken=authToken)
-            if not useId:
-                vars=json.loads('{"screen_name":"","withGrokTranslatedBio":false}')
-                vars['screen_name'] = screen_name
-                user = requests.get(f"https://x.com/i/api/graphql/{userByScreenNameGraphql_api}/UserByScreenName",{'variables':json.dumps(vars),'features':userByScreenNameGraphqlFeatures,'fieldToggles':'{"withAuxiliaryUserLabels":true}'},headers=reqHeaders)
-            else:
-                vars=json.loads('{"userId":"","withGrokTranslatedBio":false}')
-                vars['userId'] = screen_name
-                user = requests.get(f"https://x.com/i/api/graphql/{userByRestIdGraphql_api}/UserByRestId",{'variables':json.dumps(vars),'features':userByScreenNameGraphqlFeatures,'fieldToggles':'{"withAuxiliaryUserLabels":true}'},headers=reqHeaders)
-            output = user.json()
-            if "errors" in output:
-                # pick the first error and create a twExtractError
-                error = output["errors"][0]
-                raise TwExtractError(error["code"], error["message"])
-            elif 'user' not in output['data']:
-                raise TwExtractError(404, "User not found.")
-            elif output['data']['user']['result']['__typename'] == 'UserUnavailable':
-                raise TwExtractError(404, output['data']['user']['result']['message'])
-            return output
+            return extractUserGraphql(method, userInput, workaroundTokens)
         except Exception as e:
-            if hasattr(e,"msg") and ('suspended' in e.msg or e.msg == 'User not found.'):
-                raise e
-            continue
+            if _isFinalUserError(e):
+                raise
+            print(f"{method['name']} user method failed: {e}")
     raise TwExtractError(400, "Extract error")
 
 def extractUserFeedFromId(userId,workaroundTokens):
-    tokens = workaroundTokens
-    random.shuffle(tokens)
-    for authToken in tokens:
-        if authToken.startswith("oa|"): # oauth token not supported atm
-            # TODO: https://api.twitter.com/graphql/x31u1gdnjcqtiVZFc1zWnQ/UserWithProfileTweetsQueryV2?variables={"cursor":"?","includeTweetImpression":true,"includeHasBirdwatchNotes":false,"includeEditPerspective":false,"includeEditControl":true,"count":40,"rest_id":"12","includeTweetVisibilityNudge":true,"autoplay_enabled":true}&features={"longform_notetweets_inline_media_enabled":true,"super_follow_badge_privacy_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"super_follow_user_api_enabled":true,"unified_cards_ad_metadata_container_dynamic_card_content_query_enabled":true,"super_follow_tweet_api_enabled":true,"articles_api_enabled":true,"android_graphql_skip_api_media_color_palette":true,"creator_subscriptions_tweet_preview_api_enabled":true,"freedom_of_speech_not_reach_fetch_enabled":true,"tweetypie_unmention_optimization_enabled":true,"longform_notetweets_consumption_enabled":true,"subscriptions_verification_info_enabled":true,"blue_business_profile_image_shape_enabled":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"immersive_video_status_linkable_timestamps":false,"super_follow_exclusive_tweet_notifications_enabled":true}
-            continue
+    for method in GET_FEED_METHODS:
         try:
-            vars = json.loads('{"userId":"0","count":20,"includePromotedContent":true,"withCommunity":true,"withVoice":true}')
-            vars['userId'] = str(userId)
-            vars['includePromotedContent'] = False # idk if this works
-            reqHeaders = getAuthHeaders(v2bearer,authToken=authToken)
-            endpoint=f"/i/api/graphql/{tweetFeedGraphql_api}/UserTweetsAndReplies"
-            reqHeaders["x-client-transaction-id"] = twUtils.generate_transaction_id("GET",endpoint)
-            feed = requests.get(f"https://{twitterUrl}{endpoint}", {'variables':json.dumps(vars),'features':tweetFeedGraphqlFeatures,'fieldToggles':'{"withArticlePlainText":false}'},headers=reqHeaders)
-            if feed.status_code == 403 or feed.status_code == 404:
-                raise TwExtractError(403, "Extract error")
-            output = feed.json()
-            if "errors" in output:
-                # pick the first error and create a twExtractError
-                error = output["errors"][0]
-                raise TwExtractError(error["code"], error["message"])
-            timelineInstructions = output['data']['user']['result']['timeline']['timeline']['instructions']
-            #tweetIds=None
-            tweets=None
-            for instruction in timelineInstructions:
-                if 'type' in instruction and instruction['type'] == 'TimelineAddEntries':
-                    entries = instruction['entries']
-                    #tweetIds = []
-                    tweets = []
-                    for entry in entries:
-                        if entry['entryId'].startswith("tweet-"):
-                            # get the tweet ID from the entryId
-                            #tweetId = entry['entryId'].split("-")[1]
-                            #tweetIds.append(tweetId)
-                            tweet = entry['content']['itemContent']['tweet_results']['result']
-                            tweets.append(tweet)
-            return tweets
+            return _graphqlWithTokens(method, userId, workaroundTokens, lambda output: method["parser"](output, userId, **method["parser_args"]))
         except Exception as e:
-            print(f"Exception in extractUserFeedFromId: {str(e)}")
-            continue
+            print(f"{method['name']} feed method failed: {e}")
     raise TwExtractError(400, "Extract error")
 
 def lambda_handler(event, context):

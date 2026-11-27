@@ -1,22 +1,28 @@
 import html
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import json
 from configHandler import config
 from utils import stripEndTCO
 
 def getApiUserResponse(user):
     userResult = user["data"]["user"]["result"]
+    legacy = userResult.get("legacy", {})
+    core = userResult["core"]
+    createdAt = core.get("created_at")
+    if createdAt is None and "created_at_ms" in core:
+        # some don't expose created_at?
+        createdAt = datetime.fromtimestamp(core["created_at_ms"] / 1000, timezone.utc).strftime("%a %b %d %H:%M:%S +0000 %Y")
     return {
         "id": int(userResult["rest_id"]),
-        "screen_name": userResult["core"]["screen_name"],
-        "name": userResult["core"]["name"],
+        "screen_name": core["screen_name"],
+        "name": core["name"],
         "profile_image_url": userResult['avatar']["image_url"],
-        "description": userResult["legacy"]["description"],
+        "description": userResult.get("profile_bio", {}).get("description", legacy.get("description")),
         "location": userResult["location"]["location"],
-        "followers_count": userResult["legacy"]["followers_count"],
-        "following_count": userResult["legacy"]["friends_count"],
-        "tweet_count": userResult["legacy"]["statuses_count"],
-        "created_at": userResult["core"]["created_at"],
+        "followers_count": userResult.get("relationship_counts", {}).get("followers", legacy.get("followers_count")),
+        "following_count": userResult.get("relationship_counts", {}).get("following", legacy.get("friends_count")),
+        "tweet_count": userResult.get("tweet_counts", {}).get("tweets", legacy.get("statuses_count")),
+        "created_at": createdAt,
         "protected": userResult["privacy"]["protected"],
         "fetched_on": int(datetime.now().timestamp()),
     }
